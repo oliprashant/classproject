@@ -603,7 +603,7 @@ body {
   color: var(--text-muted);
 }
 
-/* Version badge — change --version-accent to visually prove deployments */
+/* Version badge — update --version-accent on each deployment to show a fresh release */
 .footer-version {
   margin-top: var(--space-xs);
   display: flex;
@@ -613,8 +613,8 @@ body {
   font-size: 0.7rem;
   letter-spacing: 0.08em;
 
-  /* ⬇ CHANGE THIS COLOR IN EACH DEPLOYMENT to visually confirm CI/CD */
-  --version-accent: #4a9b6f;
+  /* Deployment accent for the version badge */
+  --version-accent: #6f8fd6;
 
   color: var(--text-muted);
 }
@@ -634,6 +634,7 @@ body {
   border: 1px solid var(--version-accent);
   border-radius: 2px;
   opacity: 0.85;
+  box-shadow: 0 0 0 1px rgba(111, 143, 214, 0.12) inset;
 }
 
 /* ── Scrollbar ─────────────────────────────────────────────────── */
