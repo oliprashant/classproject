@@ -1,0 +1,131 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      HOST: ${{ secrets.SERVER_IP }}
+      USER: ${{ secrets.SERVER_USER }}
+      PASS: ${{ secrets.SERVER_PASSWORD }}
+      SHA: ${{ github.sha }}
+      PORT: "8027"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install sshpass
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq sshpass
+
+      - name: Setup server (auto — runs every deploy, skips what's already done)
+        run: |
+          set -e
+
+          # Write Apache VirtualHost config (heredoc-free to avoid YAML indentation issues)
+          echo '<VirtualHost *:'"$PORT"'>' > /tmp/gh-actions.conf
+          echo '    DocumentRoot /home/'"$USER"'/gh-actions-app/current' >> /tmp/gh-actions.conf
+          echo '    <Directory /home/'"$USER"'/gh-actions-app/>' >> /tmp/gh-actions.conf
+          echo '        Options -Indexes +FollowSymLinks' >> /tmp/gh-actions.conf
+          echo '        AllowOverride None' >> /tmp/gh-actions.conf
+          echo '        Require all granted' >> /tmp/gh-actions.conf
+          echo '    </Directory>' >> /tmp/gh-actions.conf
+          echo '    ErrorLog ${APACHE_LOG_DIR}/gh-actions-error.log' >> /tmp/gh-actions.conf
+          echo '    CustomLog ${APACHE_LOG_DIR}/gh-actions-access.log combined' >> /tmp/gh-actions.conf
+          echo '</VirtualHost>' >> /tmp/gh-actions.conf
+
+          # SCP config file to server
+          sshpass -p "$PASS" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null /tmp/gh-actions.conf "$USER@$HOST:/tmp/gh-actions.conf"
+
+          # SSH: install Apache, create dirs, configure, reload
+          sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USER@$HOST" "
+            set -e
+
+            # 1. Install Apache if not already installed
+            if ! dpkg -s apache2 2>/dev/null | grep -q 'Status: install ok installed'; then
+              echo 'Installing Apache...'
+              echo '$PASS' | sudo -S apt-get update -qq
+              echo '$PASS' | sudo -S apt-get install -y -qq apache2
+            fi
+
+            # 2. Create app directories (idempotent)
+            mkdir -p ~/gh-actions-app/{v1,v2}
+
+            # 3. Remove old Listen 8000, add Listen 8007 to ports.conf
+            echo '$PASS' | sudo -S sed -i '/^Listen 8000$/d' /etc/apache2/ports.conf 2>/dev/null || true
+            if ! grep -q 'Listen $PORT' /etc/apache2/ports.conf 2>/dev/null; then
+              echo '$PASS' | sudo -S sh -c 'echo \"Listen $PORT\" >> /etc/apache2/ports.conf'
+            fi
+
+            # 4. Move VirtualHost config into place
+            echo '$PASS' | sudo -S mv /tmp/gh-actions.conf /etc/apache2/sites-available/gh-actions.conf
+
+            # 5. Enable site if not already enabled
+            if ! [ -L /etc/apache2/sites-enabled/gh-actions.conf ]; then
+              echo '$PASS' | sudo -S a2ensite gh-actions.conf
+            fi
+
+            # 6. Fix directory permissions for Apache
+            echo '$PASS' | sudo -S chmod 755 /home/\$USER/
+            echo '$PASS' | sudo -S chown -R \$USER:www-data ~/gh-actions-app/
+
+            # 7. Test config and reload Apache gracefully
+            echo '$PASS' | sudo -S apache2ctl configtest
+            echo '$PASS' | sudo -S apache2ctl graceful
+          "
+          echo "Server setup complete"
+
+      - name: Blue-Green Deploy
+        run: |
+          set -e
+
+          echo "=== Testing SSH connection ==="
+          sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USER@$HOST" "echo 'SSH connection OK'"
+
+          echo "=== Determining inactive version (blue-green) ==="
+          INACTIVE=$(sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USER@$HOST" "
+            APP_DIR=/home/$USER/gh-actions-app
+            if [ -L \$APP_DIR/current ] && [ \"\$(readlink \$APP_DIR/current)\" = \"\$APP_DIR/v2\" ]; then
+              echo v1
+            else
+              echo v2
+            fi
+          ")
+          echo "Target version: $INACTIVE"
+
+          echo "=== Preparing index.html with metadata ==="
+          SHORT_SHA="${SHA:0:7}"
+          DEPLOY_TIME="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+          sed "s/__COMMIT_HASH__/$SHORT_SHA/g; s/__DEPLOY_TIME__/$DEPLOY_TIME/g" index.html > /tmp/index_deploy.html
+          echo "Commit: $SHORT_SHA | Time: $DEPLOY_TIME"
+
+          echo "=== Uploading to inactive version ==="
+          sshpass -p "$PASS" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null /tmp/index_deploy.html "$USER@$HOST:/home/$USER/gh-actions-app/$INACTIVE/index.html"
+
+          echo "=== Atomic symlink swap + graceful Apache reload ==="
+          sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USER@$HOST" "
+            APP_DIR=/home/$USER/gh-actions-app
+            ln -sfn \$APP_DIR/$INACTIVE \$APP_DIR/current
+            echo '$PASS' | sudo -S apache2ctl graceful
+            echo \"\$(date -u '+%Y-%m-%dT%H:%M:%SZ') - deployed $INACTIVE\" >> \$APP_DIR/deploy.log
+          "
+
+          echo "=== Deployment complete ==="
+
+      - name: Verify deployment
+        run: |
+          echo "=== Verifying deployment on port $PORT ==="
+          sleep 2
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "http://$HOST:$PORT/")
+          CONTENT=$(curl -s "http://$HOST:$PORT/")
+          echo "HTTP Status: $RESPONSE"
+          echo "Content preview: $(echo "$CONTENT" | grep -o '<title>.*</title>')"
+          if [ "$RESPONSE" != "200" ]; then
+            echo "Deployment verification failed"
+            exit 1
+          fi
+          echo "Deployment verified — site is live on http://$HOST:$PORT"

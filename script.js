@@ -182,6 +182,7 @@ const blessingEnglish     = document.getElementById('blessingEnglish');
 const blessingContext     = document.getElementById('blessingContext');
 const errorMessage        = document.getElementById('errorMessage');
 
+<<<<<<< HEAD
 const localBlessings = [
   {
     sindarin: 'Nai tiruvantel ar varyuvantel i Valar tielyanna',
@@ -245,6 +246,8 @@ const localBlessings = [
   }
 ];
 
+=======
+>>>>>>> 043581e88cd70fcdf3c743503383b8ba7aa76b99
 let isLoading = false;
 
 /**
@@ -284,10 +287,13 @@ function showError() {
   blessingCardWrapper.classList.remove('visible');
 }
 
+<<<<<<< HEAD
 function getLocalBlessing() {
   return localBlessings[Math.floor(Math.random() * localBlessings.length)];
 }
 
+=======
+>>>>>>> 043581e88cd70fcdf3c743503383b8ba7aa76b99
 /**
  * Set the button to its loading state.
  */
@@ -329,6 +335,7 @@ async function fetchBlessing() {
 
     displayBlessing(data);
     playElvishChime();
+<<<<<<< HEAD
 
     if (typeof data.totalBlessings === 'number') {
       updateCounterDisplay(data.totalBlessings);
@@ -338,6 +345,13 @@ async function fetchBlessing() {
     console.error('Failed to fetch blessing:', err);
     displayBlessing({ blessing: getLocalBlessing() });
     playElvishChime();
+=======
+    updateCounterDisplay(data.totalBlessings);
+
+  } catch (err) {
+    console.error('Failed to fetch blessing:', err);
+    showError();
+>>>>>>> 043581e88cd70fcdf3c743503383b8ba7aa76b99
   } finally {
     setLoading(false);
   }
