@@ -1,6 +1,3 @@
-const path = require('path');
-const { version } = require(path.join(__dirname, '..', 'package.json'));
-
 let blessingCounter = 0;
 
 const blessings = [
@@ -66,46 +63,18 @@ const blessings = [
   }
 ];
 
-function sendJson(res, payload) {
-  res.setHeader('Content-Type', 'application/json');
-  res.statusCode = 200;
-  res.end(JSON.stringify(payload));
-}
-
 module.exports = (req, res) => {
-  const route = Array.isArray(req.query.path) ? req.query.path.join('/') : String(req.query.path || '');
-
   if (req.method !== 'GET') {
     res.statusCode = 405;
-    return sendJson(res, { success: false, error: 'Method not allowed' });
+    return res.json({ success: false, error: 'Method not allowed' });
   }
 
-  if (route === 'blessing') {
-    const blessing = blessings[Math.floor(Math.random() * blessings.length)];
-    blessingCounter += 1;
-    return sendJson(res, {
-      success: true,
-      blessing,
-      totalBlessings: blessingCounter
-    });
-  }
+  const blessing = blessings[Math.floor(Math.random() * blessings.length)];
+  blessingCounter += 1;
 
-  if (route === 'counter') {
-    return sendJson(res, {
-      success: true,
-      count: blessingCounter
-    });
-  }
-
-  if (route === 'version') {
-    return sendJson(res, {
-      success: true,
-      version,
-      name: 'arwen-blessing',
-      environment: process.env.NODE_ENV || 'development'
-    });
-  }
-
-  res.statusCode = 404;
-  return sendJson(res, { success: false, error: 'Not found' });
+  return res.status(200).json({
+    success: true,
+    blessing,
+    totalBlessings: blessingCounter
+  });
 };
