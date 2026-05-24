@@ -1,0 +1,15 @@
+{
+  "name": "arwen-blessing",
+  "version": "1.0.0",
+  "description": "Arwen's Blessing Generator — A Middle-earth themed blessing app",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node app.js"
+  },
+  "author": "Prashant Oli",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
