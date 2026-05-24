@@ -1,13 +1,4 @@
-/**
- * Arwen's Blessing Generator — script.js
- * Frontend logic: starfield, blessing fetch, counter, audio, version
- */
-
 'use strict';
-
-// ═══════════════════════════════════════════════════════════════════
-// STARFIELD — Drifting star particles (Elbereth's light)
-// ═══════════════════════════════════════════════════════════════════
 
 (function initStarfield() {
   const canvas = document.getElementById('starfield');
@@ -17,78 +8,67 @@
   let stars = [];
   let animFrame;
 
-  // Resize canvas to viewport
   function resize() {
-    canvas.width  = window.innerWidth;
+    canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
   }
 
-  // Create a single star with random properties
   function createStar() {
     return {
-      x:       Math.random() * canvas.width,
-      y:       Math.random() * canvas.height,
-      radius:  Math.random() * 1.2 + 0.2,
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      radius: Math.random() * 1.2 + 0.2,
       opacity: Math.random() * 0.7 + 0.1,
-      speed:   Math.random() * 0.08 + 0.01,    // drift speed
-      drift:   (Math.random() - 0.5) * 0.03,   // horizontal drift
-      pulse:   Math.random() * Math.PI * 2,     // phase offset for twinkle
+      speed: Math.random() * 0.08 + 0.01,
+      drift: (Math.random() - 0.5) * 0.03,
+      pulse: Math.random() * Math.PI * 2,
       pulseSpeed: Math.random() * 0.012 + 0.004
     };
   }
 
-  // Populate star array
   function initStars() {
     const count = Math.floor((canvas.width * canvas.height) / 4000);
     stars = Array.from({ length: Math.min(count, 280) }, createStar);
   }
 
-  // Main draw loop
   function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     for (const star of stars) {
-      // Twinkle: modulate opacity with sine wave
       const twinkle = Math.sin(star.pulse) * 0.35 + 0.65;
-      const alpha   = star.opacity * twinkle;
+      const alpha = star.opacity * twinkle;
 
-      // Occasionally draw as a tiny four-pointed star for variety
       if (star.radius > 1.0) {
         ctx.save();
         ctx.translate(star.x, star.y);
         ctx.globalAlpha = alpha;
         ctx.fillStyle = '#d4c88a';
-        // Draw a small plus / cross shape
         const r = star.radius;
         ctx.fillRect(-r * 0.35, -r * 1.4, r * 0.7, r * 2.8);
         ctx.fillRect(-r * 1.4, -r * 0.35, r * 2.8, r * 0.7);
         ctx.restore();
       } else {
-        // Simple round star
         ctx.beginPath();
         ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(220, 210, 170, ${alpha})`;
         ctx.fill();
       }
 
-      // Update position — slow downward drift
-      star.y     += star.speed;
-      star.x     += star.drift;
+      star.y += star.speed;
+      star.x += star.drift;
       star.pulse += star.pulseSpeed;
 
-      // Wrap around edges
       if (star.y > canvas.height + 2) {
         star.y = -2;
         star.x = Math.random() * canvas.width;
       }
-      if (star.x < -2)                star.x = canvas.width + 1;
-      if (star.x > canvas.width  + 2) star.x = -1;
+      if (star.x < -2) star.x = canvas.width + 1;
+      if (star.x > canvas.width + 2) star.x = -1;
     }
 
     animFrame = requestAnimationFrame(draw);
   }
 
-  // Init
   resize();
   initStars();
   draw();
@@ -101,16 +81,6 @@
   });
 })();
 
-
-// ═══════════════════════════════════════════════════════════════════
-// WEB AUDIO — Soft elvish chime using the Web Audio API
-// No external files needed; synthesized purely in-browser.
-// ═══════════════════════════════════════════════════════════════════
-
-/**
- * Plays a delicate, ethereal chime — three harmonic tones that fade out,
- * evoking the silver bells of Rivendell.
- */
 function playElvishChime() {
   try {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -118,27 +88,22 @@ function playElvishChime() {
 
     const ac = new AudioContext();
 
-    // Unlock context if needed (for browsers requiring user interaction)
     if (ac.state === 'suspended') {
       ac.resume();
     }
 
-    // Three harmonically related notes: root, major third, perfect fifth
-    // ~C5 (523), E5 (659), G5 (784) Hz — a soft C major chord
     const notes = [523.25, 659.25, 783.99];
-    const now   = ac.currentTime;
+    const now = ac.currentTime;
 
     notes.forEach((freq, i) => {
-      const osc  = ac.createOscillator();
+      const osc = ac.createOscillator();
       const gain = ac.createGain();
 
-      // Sine wave for purity; slight detune for warmth
       osc.type = 'sine';
       osc.frequency.setValueAtTime(freq, now);
-      osc.detune.setValueAtTime(i * 3, now); // subtle chorus
+      osc.detune.setValueAtTime(i * 3, now);
 
-      // Envelope: fast attack, long natural decay
-      const startTime = now + i * 0.12;   // stagger each note
+      const startTime = now + i * 0.12;
       gain.gain.setValueAtTime(0, startTime);
       gain.gain.linearRampToValueAtTime(0.18 - i * 0.03, startTime + 0.02);
       gain.gain.exponentialRampToValueAtTime(0.001, startTime + 2.8);
@@ -150,11 +115,10 @@ function playElvishChime() {
       osc.stop(startTime + 3.0);
     });
 
-    // Add a very soft reverb shimmer on the last note using a secondary osc
     const shimmer = ac.createOscillator();
     const shimmerGain = ac.createGain();
     shimmer.type = 'sine';
-    shimmer.frequency.setValueAtTime(1046.5, now + 0.3); // C6 — an octave up
+    shimmer.frequency.setValueAtTime(1046.5, now + 0.3);
     shimmerGain.gain.setValueAtTime(0, now + 0.3);
     shimmerGain.gain.linearRampToValueAtTime(0.06, now + 0.35);
     shimmerGain.gain.exponentialRampToValueAtTime(0.001, now + 2.2);
@@ -162,27 +126,19 @@ function playElvishChime() {
     shimmerGain.connect(ac.destination);
     shimmer.start(now + 0.3);
     shimmer.stop(now + 2.5);
-
   } catch (err) {
-    // Audio is non-critical — fail silently
     console.warn('Elvish chime could not be played:', err.message);
   }
 }
 
-
-// ═══════════════════════════════════════════════════════════════════
-// BLESSING FETCH — Core feature
-// ═══════════════════════════════════════════════════════════════════
-
-const blessingBtn         = document.getElementById('blessingBtn');
-const btnText             = document.getElementById('btnText');
+const blessingBtn = document.getElementById('blessingBtn');
+const btnText = document.getElementById('btnText');
 const blessingCardWrapper = document.getElementById('blessingCardWrapper');
-const blessingSindarin    = document.getElementById('blessingSindarin');
-const blessingEnglish     = document.getElementById('blessingEnglish');
-const blessingContext     = document.getElementById('blessingContext');
-const errorMessage        = document.getElementById('errorMessage');
+const blessingSindarin = document.getElementById('blessingSindarin');
+const blessingEnglish = document.getElementById('blessingEnglish');
+const blessingContext = document.getElementById('blessingContext');
+const errorMessage = document.getElementById('errorMessage');
 
-<<<<<<< HEAD
 const localBlessings = [
   {
     sindarin: 'Nai tiruvantel ar varyuvantel i Valar tielyanna',
@@ -246,57 +202,32 @@ const localBlessings = [
   }
 ];
 
-=======
->>>>>>> 043581e88cd70fcdf3c743503383b8ba7aa76b99
 let isLoading = false;
 
-/**
- * Show the blessing card with new content.
- * Briefly removes and re-adds the .visible class to re-trigger the
- * CSS animation even when requesting multiple blessings in a row.
- */
 function displayBlessing(data) {
   const { sindarin, english, context } = data.blessing;
-
-  // Update text content
   blessingSindarin.textContent = sindarin;
-  blessingEnglish.textContent  = english;
-  blessingContext.textContent  = context;
-
-  // Hide card momentarily then re-show to replay animation
+  blessingEnglish.textContent = english;
+  blessingContext.textContent = context;
   blessingCardWrapper.classList.remove('visible');
   blessingCardWrapper.style.display = 'none';
-
-  // Force reflow so the browser registers the class removal
   void blessingCardWrapper.offsetWidth;
-
   blessingCardWrapper.style.display = '';
   blessingCardWrapper.classList.add('visible');
-
-  // Hide any lingering error
   errorMessage.classList.remove('visible');
   errorMessage.setAttribute('aria-hidden', 'true');
 }
 
-/**
- * Show the error state.
- */
 function showError() {
   errorMessage.classList.add('visible');
   errorMessage.removeAttribute('aria-hidden');
   blessingCardWrapper.classList.remove('visible');
 }
 
-<<<<<<< HEAD
 function getLocalBlessing() {
   return localBlessings[Math.floor(Math.random() * localBlessings.length)];
 }
 
-=======
->>>>>>> 043581e88cd70fcdf3c743503383b8ba7aa76b99
-/**
- * Set the button to its loading state.
- */
 function setLoading(loading) {
   isLoading = loading;
   if (loading) {
@@ -304,14 +235,10 @@ function setLoading(loading) {
     btnText.textContent = 'Consulting the Evenstar…';
   } else {
     blessingBtn.classList.remove('loading');
-    btnText.textContent = 'Receive Arwen\'s Blessing';
+    btnText.textContent = "Receive Arwen's Blessing";
   }
 }
 
-/**
- * Fetch a random blessing from the API.
- * Increments the counter server-side automatically.
- */
 async function fetchBlessing() {
   if (isLoading) return;
 
@@ -320,7 +247,7 @@ async function fetchBlessing() {
   try {
     const response = await fetch('/api/blessing', {
       method: 'GET',
-      headers: { 'Accept': 'application/json' }
+      headers: { Accept: 'application/json' }
     });
 
     if (!response.ok) {
@@ -335,41 +262,23 @@ async function fetchBlessing() {
 
     displayBlessing(data);
     playElvishChime();
-<<<<<<< HEAD
 
     if (typeof data.totalBlessings === 'number') {
       updateCounterDisplay(data.totalBlessings);
     }
-
   } catch (err) {
     console.error('Failed to fetch blessing:', err);
     displayBlessing({ blessing: getLocalBlessing() });
     playElvishChime();
-=======
-    updateCounterDisplay(data.totalBlessings);
-
-  } catch (err) {
-    console.error('Failed to fetch blessing:', err);
-    showError();
->>>>>>> 043581e88cd70fcdf3c743503383b8ba7aa76b99
   } finally {
     setLoading(false);
   }
 }
 
-// Attach click handler to button
 blessingBtn.addEventListener('click', fetchBlessing);
-
-
-// ═══════════════════════════════════════════════════════════════════
-// COUNTER — Fetch and display current count on page load
-// ═══════════════════════════════════════════════════════════════════
 
 const counterText = document.getElementById('counterText');
 
-/**
- * Update the counter display with a brief fade transition.
- */
 function updateCounterDisplay(count) {
   counterText.classList.add('updating');
 
@@ -380,14 +289,11 @@ function updateCounterDisplay(count) {
   }, 200);
 }
 
-/**
- * Fetch current counter from the API on page load (read-only, no increment).
- */
 async function loadCounter() {
   try {
     const response = await fetch('/api/counter', {
       method: 'GET',
-      headers: { 'Accept': 'application/json' }
+      headers: { Accept: 'application/json' }
     });
 
     if (!response.ok) return;
@@ -397,27 +303,17 @@ async function loadCounter() {
       updateCounterDisplay(data.count);
     }
   } catch (err) {
-    // Counter is non-critical — fail silently
     console.warn('Could not load counter:', err.message);
   }
 }
 
-
-// ═══════════════════════════════════════════════════════════════════
-// VERSION — Fetch and display version badge in footer
-// ═══════════════════════════════════════════════════════════════════
-
 const versionNumber = document.getElementById('versionNumber');
 
-/**
- * Fetch the current app version from the API and display it.
- * Confirms the correct deployment is live (CI/CD verification).
- */
 async function loadVersion() {
   try {
     const response = await fetch('/api/version', {
       method: 'GET',
-      headers: { 'Accept': 'application/json' }
+      headers: { Accept: 'application/json' }
     });
 
     if (!response.ok) return;
@@ -431,11 +327,6 @@ async function loadVersion() {
     versionNumber.textContent = 'v?';
   }
 }
-
-
-// ═══════════════════════════════════════════════════════════════════
-// INIT — Run on DOMContentLoaded
-// ═══════════════════════════════════════════════════════════════════
 
 document.addEventListener('DOMContentLoaded', () => {
   loadCounter();
