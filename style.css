@@ -1,4 +1,11 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Arwen's Blessing Generator — style.css
+   Middle-earth / Rivendell aesthetic
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Custom Properties ─────────────────────────────────────────── */
 :root {
+  /* Core palette */
   --clr-forest-deep:    #0d1f15;
   --clr-forest-mid:     #1a3c2a;
   --clr-forest-bright:  #2d5a3f;
@@ -7,40 +14,48 @@
   --clr-twilight-rich:  #2d1b4d;
   --clr-twilight-soft:  #4a2d6b;
 
+  /* Elven golds */
   --clr-gold-bright:    #d4af37;
   --clr-gold-mid:       #c9a84c;
   --clr-gold-muted:     #a88c3a;
   --clr-gold-pale:      #e8d89a;
 
+  /* Starlight */
   --clr-star-white:     #f5f0e8;
   --clr-star-silver:    #a8c4d1;
   --clr-star-pale:      #d8eaf0;
   --clr-parchment:      #f2ead8;
   --clr-parchment-deep: #e8dbbf;
 
+  /* Semantic */
   --bg-main: var(--clr-twilight-deep);
   --text-primary: var(--clr-star-white);
   --text-muted: #8a9db5;
   --text-gold: var(--clr-gold-bright);
 
+  /* Typography */
   --font-heading: 'Cinzel Decorative', 'Cinzel', serif;
   --font-subheading: 'Cinzel', serif;
   --font-body: 'Lora', Georgia, serif;
 
+  /* Spacing */
   --space-xs: 0.5rem;
   --space-sm: 1rem;
   --space-md: 1.75rem;
   --space-lg: 3rem;
   --space-xl: 5rem;
 
+  /* Radius */
   --radius-card: 4px;
   --radius-btn: 2px;
 
+  /* Transitions */
   --transition-fast: 200ms ease;
   --transition-mid: 400ms ease;
   --transition-slow: 700ms ease;
 }
 
+/* ── Reset & Base ──────────────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -59,12 +74,14 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   position: relative;
+  /* Subtle grain texture */
   background-image:
     radial-gradient(ellipse 120% 80% at 50% 0%, #1a1035 0%, transparent 60%),
     radial-gradient(ellipse 80% 60% at 20% 100%, #0d2018 0%, transparent 50%),
     radial-gradient(ellipse 60% 40% at 80% 80%, #120c22 0%, transparent 50%);
 }
 
+/* ── Starfield Canvas ──────────────────────────────────────────── */
 #starfield {
   position: fixed;
   inset: 0;
@@ -72,6 +89,7 @@ body {
   pointer-events: none;
 }
 
+/* ── Vignettes ─────────────────────────────────────────────────── */
 .vignette-top,
 .vignette-bottom {
   position: fixed;
@@ -92,6 +110,7 @@ body {
   background: linear-gradient(to top, rgba(14, 8, 24, 0.9) 0%, transparent 100%);
 }
 
+/* ── Page Wrapper ──────────────────────────────────────────────── */
 .page-wrapper {
   position: relative;
   z-index: 2;
@@ -105,6 +124,7 @@ body {
   min-height: 100vh;
 }
 
+/* ── Header ────────────────────────────────────────────────────── */
 .site-header {
   display: flex;
   flex-direction: column;
@@ -114,6 +134,7 @@ body {
   padding-top: var(--space-md);
 }
 
+/* Evenstar Pendant */
 .evenstar-pendant {
   position: relative;
   width: 120px;
@@ -154,6 +175,7 @@ body {
   50%       { opacity: 1;   transform: scale(1.15); }
 }
 
+/* Header text */
 .header-text {
   display: flex;
   flex-direction: column;
@@ -190,6 +212,7 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* Lore quote */
 .lore-quote {
   max-width: 440px;
   border-left: 1px solid rgba(212, 175, 55, 0.3);
@@ -216,6 +239,7 @@ body {
   color: var(--clr-gold-muted);
 }
 
+/* ── Elven Divider ─────────────────────────────────────────────── */
 .elven-divider {
   width: 100%;
   max-width: 500px;
@@ -228,6 +252,7 @@ body {
   overflow: visible;
 }
 
+/* ── Main Content ──────────────────────────────────────────────── */
 .main-content {
   width: 100%;
   display: flex;
@@ -236,6 +261,7 @@ body {
   gap: var(--space-md);
 }
 
+/* ── Blessing Button ───────────────────────────────────────────── */
 .blessing-action {
   display: flex;
   justify-content: center;
@@ -326,6 +352,7 @@ body {
   text-shadow: 0 0 8px var(--clr-gold-bright);
 }
 
+/* Shimmer sweep on hover */
 .btn-shimmer {
   position: absolute;
   top: 0;
@@ -346,10 +373,12 @@ body {
   transition: left 0.55s ease;
 }
 
+/* ── Blessing Card ─────────────────────────────────────────────── */
 .blessing-card-wrapper {
   width: 100%;
   max-width: 640px;
-  display: none;    }
+  display: none;    /* shown by JS */
+}
 
 .blessing-card-wrapper.visible {
   display: block;
@@ -384,6 +413,7 @@ body {
     0 0 60px rgba(212, 175, 55, 0.06),
     inset 0 1px 0 rgba(255, 251, 230, 0.08);
 
+  /* Parchment-like inner texture overlay */
   overflow: hidden;
 }
 
@@ -398,6 +428,7 @@ body {
   border-radius: var(--radius-card);
 }
 
+/* Corner ornaments */
 .corner-ornament {
   position: absolute;
   font-size: 1.2rem;
@@ -414,6 +445,7 @@ body {
 .corner-bl { bottom: 12px; left:  14px; transform: rotate(-90deg); }
 .corner-br { bottom: 12px; right: 14px; transform: rotate(180deg); }
 
+/* Card border accents */
 .card-border-top,
 .card-border-bottom {
   width: 100%;
@@ -432,6 +464,7 @@ body {
   overflow: visible;
 }
 
+/* Card content */
 .card-content {
   display: flex;
   flex-direction: column;
@@ -474,6 +507,7 @@ body {
   margin-top: var(--space-xs);
 }
 
+/* ── Error Message ─────────────────────────────────────────────── */
 .error-message {
   display: none;
   text-align: center;
@@ -504,6 +538,7 @@ body {
   color: #9a6060 !important;
 }
 
+/* ── Blessing Counter ──────────────────────────────────────────── */
 .blessing-counter {
   display: flex;
   align-items: center;
@@ -533,6 +568,7 @@ body {
   opacity: 0.4;
 }
 
+/* ── Footer ────────────────────────────────────────────────────── */
 .site-footer {
   text-align: center;
   display: flex;
@@ -567,6 +603,7 @@ body {
   color: var(--text-muted);
 }
 
+/* Version badge — change --version-accent to visually prove deployments */
 .footer-version {
   margin-top: var(--space-xs);
   display: flex;
@@ -576,7 +613,8 @@ body {
   font-size: 0.7rem;
   letter-spacing: 0.08em;
 
-  --version-accent: #6f8fd6;
+  /* ⬇ CHANGE THIS COLOR IN EACH DEPLOYMENT to visually confirm CI/CD */
+  --version-accent: #4a9b6f;
 
   color: var(--text-muted);
 }
@@ -596,9 +634,9 @@ body {
   border: 1px solid var(--version-accent);
   border-radius: 2px;
   opacity: 0.85;
-  box-shadow: 0 0 0 1px rgba(111, 143, 214, 0.12) inset;
 }
 
+/* ── Scrollbar ─────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--clr-twilight-deep); }
 ::-webkit-scrollbar-thumb {
@@ -607,11 +645,13 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover { background: rgba(212, 175, 55, 0.6); }
 
+/* ── Selection ─────────────────────────────────────────────────── */
 ::selection {
   background: rgba(212, 175, 55, 0.25);
   color: #fffbe0;
 }
 
+/* ── Responsive ────────────────────────────────────────────────── */
 @media (max-width: 600px) {
   .page-wrapper {
     padding: var(--space-md) var(--space-sm);
@@ -665,6 +705,7 @@ body {
   }
 }
 
+/* ── Reduced Motion ────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .evenstar-svg {
     animation: pendantPulse 4s ease-in-out infinite;

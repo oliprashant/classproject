@@ -19,6 +19,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'  # or your preferred version
+
+      - name: Install dependencies
+        run: npm ci  # or npm install for more permissive installation
+
+      - name: Run Node.js application tests
+        run: |
+          npm test  # if you have tests
+          # Or run specific build commands
+          # npm run build
+
       - name: Install sshpass
         run: sudo apt-get update -qq && sudo apt-get install -y -qq sshpass
 
@@ -116,6 +130,66 @@ jobs:
 
           echo "=== Deployment complete ==="
 
+      - name: Start/Restart Node.js application on server
+        run: |
+          echo "=== Setting up Node.js application on server ==="
+          sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USER@$HOST" "
+            set -e
+
+            # Install Node.js on server if not present
+            if ! command -v node &> /dev/null; then
+              echo 'Installing Node.js...'
+              curl -fsSL https://deb.nodesource.com/setup_18.x | echo '$PASS' | sudo -S bash
+              echo '$PASS' | sudo -S apt-get install -y nodejs
+            fi
+
+            # Navigate to app directory
+            APP_DIR=/home/$USER/gh-actions-app
+            cd \$APP_DIR/current
+
+            # Install dependencies on server
+            if [ -f package.json ]; then
+              echo 'Installing Node.js dependencies on server...'
+              npm ci --production  # or npm install
+            fi
+
+            # Stop existing Node.js process if running
+            if [ -f /tmp/node-app.pid ]; then
+              echo 'Stopping existing Node.js process...'
+              kill \$(cat /tmp/node-app.pid) 2>/dev/null || true
+              rm /tmp/node-app.pid
+            fi
+
+            # Kill any node processes on the specific port
+            pkill -f 'node.*$PORT' || true
+
+            # Start Node.js application
+            if [ -f server.js ] || [ -f app.js ] || [ -f index.js ]; then
+              echo 'Starting Node.js application...'
+              # Find main entry point
+              if [ -f server.js ]; then
+                MAIN_FILE='server.js'
+              elif [ -f app.js ]; then
+                MAIN_FILE='app.js'
+              else
+                MAIN_FILE='index.js'
+              fi
+              
+              # Start with PM2 if available, or use nohup
+              if command -v pm2 &> /dev/null; then
+                pm2 delete app || true
+                pm2 start \$MAIN_FILE --name 'gh-actions-app'
+                pm2 save
+              else
+                nohup node \$MAIN_FILE > /tmp/node-app.log 2>&1 &
+                echo \$! > /tmp/node-app.pid
+              fi
+              echo 'Node.js application started'
+            else
+              echo 'No Node.js entry point found, skipping application start'
+            fi
+          "
+
       - name: Verify deployment
         run: |
           echo "=== Verifying deployment on port $PORT ==="
@@ -124,8 +198,27 @@ jobs:
           CONTENT=$(curl -s "http://$HOST:$PORT/")
           echo "HTTP Status: $RESPONSE"
           echo "Content preview: $(echo "$CONTENT" | grep -o '<title>.*</title>')"
+          
+          # Also check Node.js API endpoint if applicable
+          if [ -f package.json ]; then
+            echo "=== Checking Node.js API health ==="
+            HEALTH_CHECK=$(curl -s "http://$HOST:$PORT/health" || echo "No health endpoint")
+            echo "Health check response: $HEALTH_CHECK"
+          fi
+          
           if [ "$RESPONSE" != "200" ]; then
             echo "Deployment verification failed"
             exit 1
           fi
           echo "Deployment verified — site is live on http://$HOST:$PORT"
+
+      - name: Install PM2 globally (optional - for better Node.js process management)
+        if: always()
+        run: |
+          sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USER@$HOST" "
+            if ! command -v pm2 &> /dev/null; then
+              echo 'Installing PM2 for process management...'
+              echo '$PASS' | sudo -S npm install -g pm2
+              echo '$PASS' | sudo -S pm2 startup systemd
+            fi
+          "
