@@ -48,6 +48,14 @@ jobs:
           # SCP config file to server
           sshpass -p "$PASS" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null /tmp/gh-actions.conf "$USER@$HOST:/tmp/gh-actions.conf"
 
+          # Verify the file arrived on the remote host
+          if ! sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USER@$HOST" "test -f /tmp/gh-actions.conf"; then
+            echo "ERROR: /tmp/gh-actions.conf not found on remote after scp"
+            echo "--- Remote /tmp listing ---"
+            sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USER@$HOST" "ls -la /tmp || true"
+            exit 1
+          fi
+
           # SSH: install Apache, create dirs, configure, reload
           sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USER@$HOST" "
             set -e
