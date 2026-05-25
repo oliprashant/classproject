@@ -2,226 +2,144 @@ name: Deploy
 
 on:
   push:
-    branches: [main]
+    branches: [master, main]
   workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
+    timeout-minutes: 20
     env:
-      HOST: ${{ secrets.SERVER_IP }}
-      USER: ${{ secrets.SERVER_USER }}
+      HOST: ${{ secrets.SERVER_HOST }}
+      USER: ${{ secrets.SERVER_USERNAME }}
       PASS: ${{ secrets.SERVER_PASSWORD }}
-      SHA: ${{ github.sha }}
       PORT: "8027"
+      APP_NAME: "prashantoli"
+      CONF_NAME: "prshant"
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '18'  # or your preferred version
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
-        run: npm ci 
+        run: npm ci
+
+      - name: Build static site
+        run: npm run build
+
       - name: Install sshpass
         run: sudo apt-get update -qq && sudo apt-get install -y -qq sshpass
 
-      - name: Setup server (auto — runs every deploy, skips what's already done)
+      - name: Setup server (idempotent)
+        timeout-minutes: 5
         run: |
           set -e
 
-          # Write Apache VirtualHost config (heredoc-free to avoid YAML indentation issues)
-          echo '<VirtualHost *:'"$PORT"'>' > /tmp/gh-actions.conf
-          echo '    DocumentRoot /home/'"$USER"'/gh-actions-app/current' >> /tmp/gh-actions.conf
-          echo '    <Directory /home/'"$USER"'/gh-actions-app/>' >> /tmp/gh-actions.conf
-          echo '        Options -Indexes +FollowSymLinks' >> /tmp/gh-actions.conf
-          echo '        AllowOverride None' >> /tmp/gh-actions.conf
-          echo '        Require all granted' >> /tmp/gh-actions.conf
-          echo '    </Directory>' >> /tmp/gh-actions.conf
-          echo '    ErrorLog ${APACHE_LOG_DIR}/gh-actions-error.log' >> /tmp/gh-actions.conf
-          echo '    CustomLog ${APACHE_LOG_DIR}/gh-actions-access.log combined' >> /tmp/gh-actions.conf
-          echo '</VirtualHost>' >> /tmp/gh-actions.conf
+          echo '<VirtualHost *:'"$PORT"'>' > /tmp/$CONF_NAME.conf
+          echo '    DocumentRoot /home/'"$USER"'/'"$APP_NAME"'/current' >> /tmp/$CONF_NAME.conf
+          echo '    <Directory /home/'"$USER"'/'"$APP_NAME"'/>' >> /tmp/$CONF_NAME.conf
+          echo '        Options -Indexes +FollowSymLinks' >> /tmp/$CONF_NAME.conf
+          echo '        AllowOverride None' >> /tmp/$CONF_NAME.conf
+          echo '        Require all granted' >> /tmp/$CONF_NAME.conf
+          echo '    </Directory>' >> /tmp/$CONF_NAME.conf
+          echo '    ErrorLog ${APACHE_LOG_DIR}/'"$CONF_NAME"'-error.log' >> /tmp/$CONF_NAME.conf
+          echo '    CustomLog ${APACHE_LOG_DIR}/'"$CONF_NAME"'-access.log combined' >> /tmp/$CONF_NAME.conf
+          echo '</VirtualHost>' >> /tmp/$CONF_NAME.conf
 
-          # SCP config file to server
-          sshpass -p "$PASS" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null /tmp/gh-actions.conf "$USER@$HOST:/tmp/gh-actions.conf"
+          sshpass -p "$PASS" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null /tmp/$CONF_NAME.conf "$USER@$HOST:/tmp/$CONF_NAME.conf"
 
-          # Verify the file arrived on the remote host
-          if ! sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USER@$HOST" "test -f /tmp/gh-actions.conf"; then
-            echo "ERROR: /tmp/gh-actions.conf not found on remote after scp"
-            echo "--- Remote /tmp listing ---"
-            sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USER@$HOST" "ls -la /tmp || true"
-            exit 1
-          fi
-
-          # SSH: install Apache, create dirs, configure, reload
           sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USER@$HOST" "
             set -e
 
-            # 1. Install Apache if not already installed
             if ! dpkg -s apache2 2>/dev/null | grep -q 'Status: install ok installed'; then
               echo 'Installing Apache...'
-              echo "$PASS" | sudo -S apt-get update -qq
-              echo "$PASS" | sudo -S apt-get install -y -qq apache2
+              echo '$PASS' | sudo -S apt-get update -qq
+              echo '$PASS' | sudo -S apt-get install -y -qq apache2
             fi
 
-            # 2. Create app directories (idempotent)
-            mkdir -p ~/gh-actions-app/{v1,v2}
+            mkdir -p ~/$APP_NAME/{v1,v2}
 
-            # 3. Remove old Listen 8000, add Listen 8007 to ports.conf
-            echo "$PASS" | sudo -S sed -i '/^Listen 8000$/d' /etc/apache2/ports.conf 2>/dev/null || true
+            echo '$PASS' | sudo -S sh -c 'lsof -ti tcp:$PORT 2>/dev/null | xargs -r sudo kill -9 || true'
+            echo '$PASS' | sudo -S sed -i '/^Listen $PORT\$/d' /etc/apache2/ports.conf 2>/dev/null || true
             if ! grep -q 'Listen $PORT' /etc/apache2/ports.conf 2>/dev/null; then
-              echo "$PASS" | sudo -S sh -c 'echo "Listen $PORT" >> /etc/apache2/ports.conf'
+              echo '$PASS' | sudo -S sh -c 'echo \"Listen $PORT\" >> /etc/apache2/ports.conf'
             fi
 
-            # 4. Move VirtualHost config into place
-            echo "$PASS" | sudo -S mv /tmp/gh-actions.conf /etc/apache2/sites-available/gh-actions.conf
-
-            # 5. Enable site if not already enabled
-            if ! [ -L /etc/apache2/sites-enabled/gh-actions.conf ]; then
-              echo "$PASS" | sudo -S a2ensite gh-actions.conf
+            echo '$PASS' | sudo -S mv /tmp/$CONF_NAME.conf /etc/apache2/sites-available/$CONF_NAME.conf
+            if ! [ -L /etc/apache2/sites-enabled/$CONF_NAME.conf ]; then
+              echo '$PASS' | sudo -S a2ensite $CONF_NAME.conf
             fi
 
-            # 6. Fix directory permissions for Apache
-            echo "$PASS" | sudo -S chmod 755 /home/\$USER/
-            echo "$PASS" | sudo -S chown -R \$USER:www-data ~/gh-actions-app/
+            echo '$PASS' | sudo -S chmod 755 /home/\$USER/
+            echo '$PASS' | sudo -S chown -R \$USER:www-data ~/$APP_NAME/
 
-            # 7. Test config and reload Apache gracefully
-            echo "$PASS" | sudo -S apache2ctl configtest
-            echo "$PASS" | sudo -S apache2ctl graceful
+            echo '$PASS' | sudo -S apache2ctl configtest
+            echo '$PASS' | sudo -S apache2ctl graceful
           "
-          echo "Server setup complete"
 
       - name: Blue-Green Deploy
+        timeout-minutes: 8
         run: |
           set -e
 
+          SSH_OPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=20 -o ServerAliveInterval=15 -o ServerAliveCountMax=4"
+
           echo "=== Testing SSH connection ==="
-          sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USER@$HOST" "echo 'SSH connection OK'"
+          timeout 30 sshpass -p "$PASS" ssh $SSH_OPTS "$USER@$HOST" "echo 'SSH connection OK'"
 
           echo "=== Determining inactive version (blue-green) ==="
-          INACTIVE=$(sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USER@$HOST" "
-            APP_DIR=/home/$USER/gh-actions-app
-            if [ -L \$APP_DIR/current ] && [ \"\$(readlink \$APP_DIR/current)\" = \"\$APP_DIR/v2\" ]; then
-              echo v1
-            else
-              echo v2
-            fi
-          ")
+          INACTIVE=$(timeout 30 sshpass -p "$PASS" ssh $SSH_OPTS "$USER@$HOST" 'APP_DIR=/home/'"$USER"'/'"$APP_NAME"'; if [ -L "$APP_DIR/current" ] && [ "$(readlink "$APP_DIR/current")" = "$APP_DIR/v2" ]; then echo v1; else echo v2; fi')
           echo "Target version: $INACTIVE"
 
-          echo "=== Preparing index.html with metadata ==="
-          SHORT_SHA="${SHA:0:7}"
-          DEPLOY_TIME="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
-          sed "s/__COMMIT_HASH__/$SHORT_SHA/g; s/__DEPLOY_TIME__/$DEPLOY_TIME/g" index.html > /tmp/index_deploy.html
-          echo "Commit: $SHORT_SHA | Time: $DEPLOY_TIME"
+          echo "=== Cleaning inactive slot ==="
+          timeout 60 sshpass -p "$PASS" ssh $SSH_OPTS "$USER@$HOST" "rm -rf /home/$USER/$APP_NAME/$INACTIVE/* /home/$USER/$APP_NAME/$INACTIVE/.[!.]* 2>/dev/null || true"
 
-          echo "=== Uploading to inactive version ==="
-          sshpass -p "$PASS" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null /tmp/index_deploy.html "$USER@$HOST:/home/$USER/gh-actions-app/$INACTIVE/index.html"
+          echo "=== Packing static export (dist/) ==="
+          tar -czf /tmp/deploy.tar.gz -C dist .
+          echo "Tarball size: $(du -sh /tmp/deploy.tar.gz | cut -f1), files: $(find dist -type f | wc -l)"
+
+          echo "=== Uploading tarball via scp (with retries) ==="
+          for attempt in 1 2 3; do
+            echo "Attempt $attempt..."
+            if timeout 240 sshpass -p "$PASS" scp $SSH_OPTS /tmp/deploy.tar.gz "$USER@$HOST:/tmp/deploy.tar.gz"; then
+              echo "Upload OK"
+              break
+            fi
+            echo "Upload failed, retrying..."
+            sleep 5
+            if [ "$attempt" = "3" ]; then
+              echo "Upload failed after 3 attempts"; exit 1
+            fi
+          done
+
+          echo "=== Extracting on server ==="
+          timeout 90 sshpass -p "$PASS" ssh $SSH_OPTS "$USER@$HOST" "tar -xzf /tmp/deploy.tar.gz -C /home/$USER/$APP_NAME/$INACTIVE/ && rm -f /tmp/deploy.tar.gz"
 
           echo "=== Atomic symlink swap + graceful Apache reload ==="
-          sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USER@$HOST" "
-            APP_DIR=/home/$USER/gh-actions-app
-            ln -sfn \$APP_DIR/$INACTIVE \$APP_DIR/current
-            echo \"$PASS\" | sudo -S apache2ctl graceful
-            echo \"\$(date -u '+%Y-%m-%dT%H:%M:%SZ') - deployed $INACTIVE\" >> \$APP_DIR/deploy.log
-          "
-
-          echo "=== Deployment complete ==="
-
-      - name: Start/Restart Node.js application on server
-        run: |
-          echo "=== Setting up Node.js application on server ==="
-          sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USER@$HOST" "
-            set -e
-
-            # Install Node.js on server if not present
-            if ! command -v node &> /dev/null; then
-              echo 'Installing Node.js...'
-              curl -fsSL https://deb.nodesource.com/setup_18.x -o /tmp/nodesetup.sh
-              echo \"$PASS\" | sudo -S bash /tmp/nodesetup.sh
-              echo "$PASS" | sudo -S apt-get install -y nodejs
-              rm -f /tmp/nodesetup.sh
-            fi
-
-            # Navigate to app directory
-            APP_DIR=/home/$USER/gh-actions-app
-            cd \$APP_DIR/current
-
-            # Install dependencies on server
-            if [ -f package.json ]; then
-              echo 'Installing Node.js dependencies on server...'
-              npm ci --production  # or npm install
-            fi
-
-            # Stop existing Node.js process if running
-            if [ -f /tmp/node-app.pid ]; then
-              echo 'Stopping existing Node.js process...'
-              kill \$(cat /tmp/node-app.pid) 2>/dev/null || true
-              rm /tmp/node-app.pid
-            fi
-
-            # Kill any node processes on the specific port
-            pkill -f 'node.*$PORT' || true
-
-            # Start Node.js application
-            if [ -f server.js ] || [ -f app.js ] || [ -f index.js ]; then
-              echo 'Starting Node.js application...'
-              # Find main entry point
-              if [ -f server.js ]; then
-                MAIN_FILE='server.js'
-              elif [ -f app.js ]; then
-                MAIN_FILE='app.js'
-              else
-                MAIN_FILE='index.js'
-              fi
-              
-              # Start with PM2 if available, or use nohup
-              if command -v pm2 &> /dev/null; then
-                pm2 delete app || true
-                pm2 start \$MAIN_FILE --name 'gh-actions-app'
-                pm2 save
-              else
-                nohup node \$MAIN_FILE > /tmp/node-app.log 2>&1 &
-                echo \$! > /tmp/node-app.pid
-              fi
-              echo 'Node.js application started'
-            else
-              echo 'No Node.js entry point found, skipping application start'
-            fi
-          "
+          DEPLOY_TIME="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+          timeout 60 sshpass -p "$PASS" ssh $SSH_OPTS "$USER@$HOST" "APP_DIR=/home/$USER/$APP_NAME; ln -sfn \$APP_DIR/$INACTIVE \$APP_DIR/current; echo '$DEPLOY_TIME - deployed $INACTIVE' >> \$APP_DIR/deploy.log; echo '$PASS' | sudo -S apache2ctl graceful"
 
       - name: Verify deployment
+        timeout-minutes: 3
         run: |
-          echo "=== Verifying deployment on port $PORT ==="
+          set -e
+          echo "=== Verifying deployment on port $PORT (via SSH to avoid external firewall) ==="
           sleep 2
-          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "http://$HOST:$PORT/")
-          CONTENT=$(curl -s "http://$HOST:$PORT/")
-          echo "HTTP Status: $RESPONSE"
-          echo "Content preview: $(echo "$CONTENT" | grep -o '<title>.*</title>')"
-          
-          # Also check Node.js API endpoint if applicable
-          if [ -f package.json ]; then
-            echo "=== Checking Node.js API health ==="
-            HEALTH_CHECK=$(curl -s "http://$HOST:$PORT/health" || echo "No health endpoint")
-            echo "Health check response: $HEALTH_CHECK"
-          fi
-          
-          if [ "$RESPONSE" != "200" ]; then
-            echo "Deployment verification failed"
+
+          RESULT=$(sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=15 "$USER@$HOST" "curl -sS -o /tmp/_verify_body -w '%{http_code}' --connect-timeout 10 --max-time 20 --retry 3 --retry-delay 2 --retry-connrefused http://127.0.0.1:$PORT/ && echo && grep -o '<title>[^<]*</title>' /tmp/_verify_body || true")
+
+          echo "Server response:"
+          echo "$RESULT"
+
+          HTTP_CODE=$(echo "$RESULT" | head -n1 | tr -d '[:space:]')
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "Deployment verification failed (HTTP $HTTP_CODE)"
             exit 1
           fi
-          echo "Deployment verified — site is live on http://$HOST:$PORT"
-
-      - name: Install PM2 globally (optional - for better Node.js process management)
-        if: always()
-        run: |
-          sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USER@$HOST" "
-            if ! command -v pm2 &> /dev/null; then
-              echo 'Installing PM2 for process management...'
-              echo "$PASS" | sudo -S npm install -g pm2
-              echo "$PASS" | sudo -S pm2 startup systemd
-            fi
-          "
+          echo "Deployment verified - site is live on http://$HOST:$PORT"
