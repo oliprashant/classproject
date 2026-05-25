@@ -1,0 +1,727 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Arwen's Blessing Generator — style.css
+   Middle-earth / Rivendell aesthetic
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Custom Properties ─────────────────────────────────────────── */
+:root {
+  /* Core palette */
+  --clr-forest-deep:    #0d1f15;
+  --clr-forest-mid:     #1a3c2a;
+  --clr-forest-bright:  #2d5a3f;
+  --clr-twilight-deep:  #0e0818;
+  --clr-twilight-mid:   #1c1030;
+  --clr-twilight-rich:  #2d1b4d;
+  --clr-twilight-soft:  #4a2d6b;
+
+  /* Elven golds */
+  --clr-gold-bright:    #d4af37;
+  --clr-gold-mid:       #c9a84c;
+  --clr-gold-muted:     #a88c3a;
+  --clr-gold-pale:      #e8d89a;
+
+  /* Starlight */
+  --clr-star-white:     #f5f0e8;
+  --clr-star-silver:    #a8c4d1;
+  --clr-star-pale:      #d8eaf0;
+  --clr-parchment:      #f2ead8;
+  --clr-parchment-deep: #e8dbbf;
+
+  /* Semantic */
+  --bg-main: var(--clr-twilight-deep);
+  --text-primary: var(--clr-star-white);
+  --text-muted: #8a9db5;
+  --text-gold: var(--clr-gold-bright);
+
+  /* Typography */
+  --font-heading: 'Cinzel Decorative', 'Cinzel', serif;
+  --font-subheading: 'Cinzel', serif;
+  --font-body: 'Lora', Georgia, serif;
+
+  /* Spacing */
+  --space-xs: 0.5rem;
+  --space-sm: 1rem;
+  --space-md: 1.75rem;
+  --space-lg: 3rem;
+  --space-xl: 5rem;
+
+  /* Radius */
+  --radius-card: 4px;
+  --radius-btn: 2px;
+
+  /* Transitions */
+  --transition-fast: 200ms ease;
+  --transition-mid: 400ms ease;
+  --transition-slow: 700ms ease;
+}
+
+/* ── Reset & Base ──────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+  /* Subtle grain texture */
+  background-image:
+    radial-gradient(ellipse 120% 80% at 50% 0%, #1a1035 0%, transparent 60%),
+    radial-gradient(ellipse 80% 60% at 20% 100%, #0d2018 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 80% 80%, #120c22 0%, transparent 50%);
+}
+
+/* ── Starfield Canvas ──────────────────────────────────────────── */
+#starfield {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ── Vignettes ─────────────────────────────────────────────────── */
+.vignette-top,
+.vignette-bottom {
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 180px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.vignette-top {
+  top: 0;
+  background: linear-gradient(to bottom, rgba(14, 8, 24, 0.9) 0%, transparent 100%);
+}
+
+.vignette-bottom {
+  bottom: 0;
+  background: linear-gradient(to top, rgba(14, 8, 24, 0.9) 0%, transparent 100%);
+}
+
+/* ── Page Wrapper ──────────────────────────────────────────────── */
+.page-wrapper {
+  position: relative;
+  z-index: 2;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: var(--space-lg) var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-lg);
+  min-height: 100vh;
+}
+
+/* ── Header ────────────────────────────────────────────────────── */
+.site-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  text-align: center;
+  padding-top: var(--space-md);
+}
+
+/* Evenstar Pendant */
+.evenstar-pendant {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.evenstar-svg {
+  width: 100%;
+  height: 100%;
+  animation: pendantRotate 40s linear infinite, pendantPulse 4s ease-in-out infinite;
+  filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.6)) drop-shadow(0 0 24px rgba(168, 196, 209, 0.3));
+}
+
+.pendant-glow {
+  position: absolute;
+  inset: -20px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, transparent 70%);
+  animation: glowPulse 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes pendantRotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes pendantPulse {
+  0%, 100% { filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.5)) drop-shadow(0 0 20px rgba(168, 196, 209, 0.2)); }
+  50%       { filter: drop-shadow(0 0 18px rgba(212, 175, 55, 0.9)) drop-shadow(0 0 36px rgba(168, 196, 209, 0.5)); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.15); }
+}
+
+/* Header text */
+.header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.site-title {
+  font-family: var(--font-heading);
+  font-size: clamp(1.8rem, 5vw, 3rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: linear-gradient(135deg, #fffbe0 0%, #d4af37 40%, #a8c4d1 70%, #e8d89a 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none;
+  animation: titleReveal 1.4s ease forwards;
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.site-subtitle {
+  font-family: var(--font-subheading);
+  font-size: clamp(0.75rem, 2.5vw, 0.9rem);
+  font-weight: 400;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--clr-gold-mid);
+  opacity: 0;
+  animation: titleReveal 1.4s ease 0.3s forwards;
+}
+
+@keyframes titleReveal {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Lore quote */
+.lore-quote {
+  max-width: 440px;
+  border-left: 1px solid rgba(212, 175, 55, 0.3);
+  padding: var(--space-xs) var(--space-md);
+  opacity: 0;
+  animation: titleReveal 1.4s ease 0.6s forwards;
+}
+
+.lore-quote p {
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  font-style: italic;
+  color: var(--clr-star-silver);
+  line-height: 1.7;
+}
+
+.lore-quote cite {
+  display: block;
+  margin-top: 0.4rem;
+  font-size: 0.75rem;
+  font-style: normal;
+  font-family: var(--font-subheading);
+  letter-spacing: 0.1em;
+  color: var(--clr-gold-muted);
+}
+
+/* ── Elven Divider ─────────────────────────────────────────────── */
+.elven-divider {
+  width: 100%;
+  max-width: 500px;
+  opacity: 0.7;
+}
+
+.elven-divider svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* ── Main Content ──────────────────────────────────────────────── */
+.main-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+/* ── Blessing Button ───────────────────────────────────────────── */
+.blessing-action {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-xs) 0;
+}
+
+.blessing-btn {
+  position: relative;
+  font-family: var(--font-subheading);
+  font-size: clamp(0.85rem, 2.5vw, 1rem);
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--clr-star-white);
+  background: linear-gradient(135deg,
+    rgba(45, 27, 77, 0.85) 0%,
+    rgba(26, 60, 42, 0.9) 50%,
+    rgba(45, 27, 77, 0.85) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  padding: 0.9rem 2.6rem;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    transform var(--transition-fast),
+    border-color var(--transition-mid),
+    box-shadow var(--transition-mid);
+  clip-path: polygon(
+    12px 0%, calc(100% - 12px) 0%,
+    100% 12px, 100% calc(100% - 12px),
+    calc(100% - 12px) 100%, 12px 100%,
+    0% calc(100% - 12px), 0% 12px
+  );
+}
+
+.blessing-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg,
+    rgba(212, 175, 55, 0.08) 0%,
+    rgba(168, 196, 209, 0.06) 50%,
+    rgba(212, 175, 55, 0.08) 100%);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.blessing-btn:hover::before,
+.blessing-btn:focus-visible::before {
+  opacity: 1;
+}
+
+.blessing-btn:hover,
+.blessing-btn:focus-visible {
+  outline: none;
+  border-color: rgba(212, 175, 55, 0.8);
+  box-shadow:
+    0 0 16px rgba(212, 175, 55, 0.3),
+    0 0 40px rgba(212, 175, 55, 0.12),
+    inset 0 0 20px rgba(212, 175, 55, 0.05);
+  transform: translateY(-2px);
+}
+
+.blessing-btn:active {
+  transform: translateY(0);
+}
+
+.blessing-btn.loading {
+  pointer-events: none;
+  opacity: 0.75;
+}
+
+.btn-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.btn-star {
+  font-size: 0.65em;
+  color: var(--clr-gold-mid);
+  transition: color var(--transition-fast);
+}
+
+.blessing-btn:hover .btn-star {
+  color: var(--clr-gold-bright);
+  text-shadow: 0 0 8px var(--clr-gold-bright);
+}
+
+/* Shimmer sweep on hover */
+.btn-shimmer {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 251, 230, 0.12) 50%,
+    transparent 100%
+  );
+  transition: none;
+}
+
+.blessing-btn:hover .btn-shimmer {
+  left: 150%;
+  transition: left 0.55s ease;
+}
+
+/* ── Blessing Card ─────────────────────────────────────────────── */
+.blessing-card-wrapper {
+  width: 100%;
+  max-width: 640px;
+  display: none;    /* shown by JS */
+}
+
+.blessing-card-wrapper.visible {
+  display: block;
+  animation: cardReveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes cardReveal {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.blessing-card {
+  position: relative;
+  background:
+    linear-gradient(135deg,
+      rgba(242, 234, 216, 0.07) 0%,
+      rgba(232, 219, 191, 0.10) 50%,
+      rgba(242, 234, 216, 0.07) 100%),
+    rgba(15, 10, 28, 0.82);
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  border-radius: var(--radius-card);
+  padding: var(--space-lg) var(--space-md);
+  backdrop-filter: blur(8px);
+  box-shadow:
+    0 4px 40px rgba(0, 0, 0, 0.5),
+    0 0 60px rgba(212, 175, 55, 0.06),
+    inset 0 1px 0 rgba(255, 251, 230, 0.08);
+
+  /* Parchment-like inner texture overlay */
+  overflow: hidden;
+}
+
+.blessing-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  opacity: 0.5;
+  border-radius: var(--radius-card);
+}
+
+/* Corner ornaments */
+.corner-ornament {
+  position: absolute;
+  font-size: 1.2rem;
+  color: var(--clr-gold-mid);
+  opacity: 0.55;
+  line-height: 1;
+  transition: opacity var(--transition-mid);
+}
+
+.blessing-card:hover .corner-ornament { opacity: 0.9; }
+
+.corner-tl { top:  12px; left:  14px; transform: rotate(0deg); }
+.corner-tr { top:  12px; right: 14px; transform: rotate(90deg); }
+.corner-bl { bottom: 12px; left:  14px; transform: rotate(-90deg); }
+.corner-br { bottom: 12px; right: 14px; transform: rotate(180deg); }
+
+/* Card border accents */
+.card-border-top,
+.card-border-bottom {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  opacity: 0.8;
+}
+
+.card-border-top  { margin-bottom: var(--space-md); }
+.card-border-bottom { margin-top: var(--space-md); }
+
+.card-border-top svg,
+.card-border-bottom svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* Card content */
+.card-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  text-align: center;
+  padding: 0 var(--space-sm);
+}
+
+.blessing-sindarin {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: clamp(1.1rem, 3.5vw, 1.45rem);
+  font-weight: 500;
+  color: var(--clr-gold-bright);
+  line-height: 1.55;
+  text-shadow: 0 0 18px rgba(212, 175, 55, 0.35);
+  letter-spacing: 0.02em;
+}
+
+.blessing-english {
+  font-family: var(--font-body);
+  font-size: clamp(0.9rem, 2.5vw, 1.05rem);
+  font-weight: 400;
+  color: var(--clr-star-white);
+  line-height: 1.65;
+  max-width: 44ch;
+}
+
+.blessing-context {
+  font-family: var(--font-subheading);
+  font-size: clamp(0.7rem, 1.8vw, 0.8rem);
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  line-height: 1.6;
+  max-width: 48ch;
+  border-top: 1px solid rgba(168, 196, 209, 0.15);
+  padding-top: var(--space-sm);
+  margin-top: var(--space-xs);
+}
+
+/* ── Error Message ─────────────────────────────────────────────── */
+.error-message {
+  display: none;
+  text-align: center;
+  padding: var(--space-md);
+  border: 1px solid rgba(180, 60, 60, 0.3);
+  background: rgba(100, 20, 20, 0.2);
+  max-width: 500px;
+  width: 100%;
+  border-radius: var(--radius-card);
+  animation: cardReveal 0.5s ease forwards;
+}
+
+.error-message.visible {
+  display: block;
+}
+
+.error-message p {
+  font-family: var(--font-body);
+  font-style: italic;
+  color: #c88080;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.error-sub {
+  margin-top: 0.4rem !important;
+  font-size: 0.8rem !important;
+  color: #9a6060 !important;
+}
+
+/* ── Blessing Counter ──────────────────────────────────────────── */
+.blessing-counter {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--font-subheading);
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid rgba(168, 196, 209, 0.12);
+  background: rgba(10, 8, 20, 0.4);
+  border-radius: 30px;
+}
+
+.counter-star {
+  font-size: 0.6em;
+  color: var(--clr-gold-mid);
+  opacity: 0.7;
+}
+
+#counterText {
+  transition: opacity 0.3s ease;
+}
+
+#counterText.updating {
+  opacity: 0.4;
+}
+
+/* ── Footer ────────────────────────────────────────────────────── */
+.site-footer {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding-bottom: var(--space-md);
+  opacity: 0;
+  animation: titleReveal 1.4s ease 1s forwards;
+}
+
+.footer-tagline {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.88rem;
+  color: var(--clr-star-silver);
+  letter-spacing: 0.06em;
+}
+
+.footer-tagline::before,
+.footer-tagline::after {
+  content: ' • ';
+  color: var(--clr-gold-muted);
+  opacity: 0.6;
+}
+
+.footer-craft {
+  font-family: var(--font-subheading);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Version badge — change --version-accent to visually prove deployments */
+.footer-version {
+  margin-top: var(--space-xs);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+
+  /* ⬇ CHANGE THIS COLOR IN EACH DEPLOYMENT to visually confirm CI/CD */
+  --version-accent: #4a9b6f;
+
+  color: var(--text-muted);
+}
+
+.version-label {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.65rem;
+  color: var(--version-accent);
+  opacity: 0.8;
+}
+
+.version-number {
+  color: var(--version-accent);
+  font-weight: bold;
+  padding: 1px 6px;
+  border: 1px solid var(--version-accent);
+  border-radius: 2px;
+  opacity: 0.85;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--clr-twilight-deep); }
+::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.3);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(212, 175, 55, 0.6); }
+
+/* ── Selection ─────────────────────────────────────────────────── */
+::selection {
+  background: rgba(212, 175, 55, 0.25);
+  color: #fffbe0;
+}
+
+/* ── Responsive ────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .page-wrapper {
+    padding: var(--space-md) var(--space-sm);
+    gap: var(--space-md);
+  }
+
+  .evenstar-pendant {
+    width: 90px;
+    height: 90px;
+  }
+
+  .blessing-card {
+    padding: var(--space-md) var(--space-sm);
+  }
+
+  .card-content {
+    padding: 0;
+  }
+
+  .corner-ornament {
+    font-size: 0.95rem;
+  }
+
+  .blessing-btn {
+    padding: 0.8rem 1.8rem;
+    clip-path: polygon(
+      8px 0%, calc(100% - 8px) 0%,
+      100% 8px, 100% calc(100% - 8px),
+      calc(100% - 8px) 100%, 8px 100%,
+      0% calc(100% - 8px), 0% 8px
+    );
+  }
+
+  .blessing-counter {
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 0.72rem;
+    padding: var(--space-xs);
+    text-align: center;
+    border-radius: var(--space-sm);
+  }
+
+  .lore-quote {
+    padding: var(--space-xs) var(--space-sm);
+  }
+}
+
+@media (max-width: 380px) {
+  .site-title {
+    font-size: 1.5rem;
+  }
+}
+
+/* ── Reduced Motion ────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .evenstar-svg {
+    animation: pendantPulse 4s ease-in-out infinite;
+  }
+
+  .site-title,
+  .site-subtitle,
+  .lore-quote,
+  .site-footer {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .blessing-card-wrapper.visible,
+  .error-message.visible {
+    animation: none;
+  }
+}

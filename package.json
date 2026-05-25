@@ -5,7 +5,8 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "dev": "node app.js"
+    "dev": "node app.js",
+    "build": "node scripts/build.js"
   },
   "author": "Prashant Oli",
   "license": "MIT",
