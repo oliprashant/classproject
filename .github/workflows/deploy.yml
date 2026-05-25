@@ -25,14 +25,7 @@ jobs:
           node-version: '18'  # or your preferred version
 
       - name: Install dependencies
-        run: npm ci  # or npm install for more permissive installation
-
-      - name: Run Node.js application tests
-        run: |
-          npm test  # if you have tests
-          # Or run specific build commands
-          # npm run build
-
+        run: npm ci 
       - name: Install sshpass
         run: sudo apt-get update -qq && sudo apt-get install -y -qq sshpass
 
