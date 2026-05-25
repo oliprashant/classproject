@@ -55,34 +55,34 @@ jobs:
             # 1. Install Apache if not already installed
             if ! dpkg -s apache2 2>/dev/null | grep -q 'Status: install ok installed'; then
               echo 'Installing Apache...'
-              echo '$PASS' | sudo -S apt-get update -qq
-              echo '$PASS' | sudo -S apt-get install -y -qq apache2
+              echo "$PASS" | sudo -S apt-get update -qq
+              echo "$PASS" | sudo -S apt-get install -y -qq apache2
             fi
 
             # 2. Create app directories (idempotent)
             mkdir -p ~/gh-actions-app/{v1,v2}
 
             # 3. Remove old Listen 8000, add Listen 8007 to ports.conf
-            echo '$PASS' | sudo -S sed -i '/^Listen 8000$/d' /etc/apache2/ports.conf 2>/dev/null || true
+            echo "$PASS" | sudo -S sed -i '/^Listen 8000$/d' /etc/apache2/ports.conf 2>/dev/null || true
             if ! grep -q 'Listen $PORT' /etc/apache2/ports.conf 2>/dev/null; then
-              echo '$PASS' | sudo -S sh -c 'echo \"Listen $PORT\" >> /etc/apache2/ports.conf'
+              echo "$PASS" | sudo -S sh -c 'echo "Listen $PORT" >> /etc/apache2/ports.conf'
             fi
 
             # 4. Move VirtualHost config into place
-            echo '$PASS' | sudo -S mv /tmp/gh-actions.conf /etc/apache2/sites-available/gh-actions.conf
+            echo "$PASS" | sudo -S mv /tmp/gh-actions.conf /etc/apache2/sites-available/gh-actions.conf
 
             # 5. Enable site if not already enabled
             if ! [ -L /etc/apache2/sites-enabled/gh-actions.conf ]; then
-              echo '$PASS' | sudo -S a2ensite gh-actions.conf
+              echo "$PASS" | sudo -S a2ensite gh-actions.conf
             fi
 
             # 6. Fix directory permissions for Apache
-            echo '$PASS' | sudo -S chmod 755 /home/\$USER/
-            echo '$PASS' | sudo -S chown -R \$USER:www-data ~/gh-actions-app/
+            echo "$PASS" | sudo -S chmod 755 /home/\$USER/
+            echo "$PASS" | sudo -S chown -R \$USER:www-data ~/gh-actions-app/
 
             # 7. Test config and reload Apache gracefully
-            echo '$PASS' | sudo -S apache2ctl configtest
-            echo '$PASS' | sudo -S apache2ctl graceful
+            echo "$PASS" | sudo -S apache2ctl configtest
+            echo "$PASS" | sudo -S apache2ctl graceful
           "
           echo "Server setup complete"
 
@@ -117,7 +117,7 @@ jobs:
           sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USER@$HOST" "
             APP_DIR=/home/$USER/gh-actions-app
             ln -sfn \$APP_DIR/$INACTIVE \$APP_DIR/current
-            echo '$PASS' | sudo -S apache2ctl graceful
+            echo \"$PASS\" | sudo -S apache2ctl graceful
             echo \"\$(date -u '+%Y-%m-%dT%H:%M:%SZ') - deployed $INACTIVE\" >> \$APP_DIR/deploy.log
           "
 
@@ -132,8 +132,10 @@ jobs:
             # Install Node.js on server if not present
             if ! command -v node &> /dev/null; then
               echo 'Installing Node.js...'
-              curl -fsSL https://deb.nodesource.com/setup_18.x | echo '$PASS' | sudo -S bash
-              echo '$PASS' | sudo -S apt-get install -y nodejs
+              curl -fsSL https://deb.nodesource.com/setup_18.x -o /tmp/nodesetup.sh
+              echo \"$PASS\" | sudo -S bash /tmp/nodesetup.sh
+              echo "$PASS" | sudo -S apt-get install -y nodejs
+              rm -f /tmp/nodesetup.sh
             fi
 
             # Navigate to app directory
@@ -211,7 +213,7 @@ jobs:
           sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USER@$HOST" "
             if ! command -v pm2 &> /dev/null; then
               echo 'Installing PM2 for process management...'
-              echo '$PASS' | sudo -S npm install -g pm2
-              echo '$PASS' | sudo -S pm2 startup systemd
+              echo "$PASS" | sudo -S npm install -g pm2
+              echo "$PASS" | sudo -S pm2 startup systemd
             fi
           "
