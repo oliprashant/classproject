@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Arwen's Blessing Generator — An Ode to the Evenstar. Receive Elvish blessings from Middle-earth.">
+    <meta name="author" content="Arwen's Blessing Generator">
+    <title>Arwen's Blessing Generator — An Ode to the Evenstar</title>
+
+    <!-- Favicon: Inline SVG Evenstar -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3CradialGradient id='g' cx='50%25' cy='50%25' r='50%25'%3E%3Cstop offset='0%25' stop-color='%23e8e4d9'/%3E%3Cstop offset='60%25' stop-color='%23d4af37'/%3E%3Cstop offset='100%25' stop-color='%23c9a84c'/%3E%3C/radialGradient%3E%3Cfilter id='glow'%3E%3CfeGaussianBlur stdDeviation='0.5' result='blur'/%3E%3CfeMerge%3E%3CfeMergeNode in='blur'/%3E%3CfeMergeNode in='SourceGraphic'/%3E%3C/feMerge%3E%3C/filter%3E%3C/defs%3E%3Cpolygon points='16,1 20,11 30,11 22,17 25,28 16,22 7,28 10,17 2,11 12,11' fill='url(%23g)' filter='url(%23glow)' stroke='%23a8c4d1' stroke-width='0.5'/%3E%3Ccircle cx='16' cy='14' r='3' fill='%23e8e4d9' opacity='0.9'/%3E%3C/svg%3E">
+
+    <!-- Google Fonts: Cinzel for headings, Lora for body -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Core palette */
+            --forest-deep: #1a3c2a;
+            --forest-mid: #2d5a3f;
+            --gold-elven: #c9a84c;
+            --gold-bright: #d4af37;
+            --twilight-deep: #2d1b4d;
+            --twilight-mid: #4a2d6b;
+            --starlight-white: #e8e4d9;
+            --starlight-silver: #a8c4d1;
+            --parchment: #f5f0e3;
+            --parchment-dark: #e8dcc8;
+            --parchment-edge: #d4c5a0;
+
+            /* Version indicator — change this color to visually prove a new deployment */
+            --version-indicator-color: #c9a84c;
+
+            /* Spacing */
+            --card-padding: 2rem;
+            --border-radius: 12px;
+
+            /* Transitions */
+            --transition-smooth: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            font-family: 'Lora', Georgia, 'Times New Roman', serif;
+            background: radial-gradient(ellipse at center, #1a1a2e 0%, #0d0d1a 40%, #050510 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--starlight-white);
+            overflow-x: hidden;
+            position: relative;
+            padding: 1rem;
+        }
+
+        /* ── Starfield Canvas ─────────────────────────── */
+        #starfield-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ── Main Container ──────────────────────────── */
+        .main-container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 620px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 1rem;
+        }
+
+        /* ── Evenstar Icon ───────────────────────────── */
+        .evenstar-icon {
+            width: 80px;
+            height: 80px;
+            filter: drop-shadow(0 0 18px rgba(201, 168, 76, 0.7)) drop-shadow(0 0 40px rgba(212, 175, 55, 0.35));
+            animation: evenstarPulse 3.5s ease-in-out infinite;
+            transition: filter var(--transition-smooth);
+        }
+
+        .evenstar-icon:hover {
+            filter: drop-shadow(0 0 28px rgba(201, 168, 76, 0.95)) drop-shadow(0 0 55px rgba(212, 175, 55, 0.5));
+        }
+
+        @keyframes evenstarPulse {
+            0%,
+            100% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 18px rgba(201, 168, 76, 0.7)) drop-shadow(0 0 40px rgba(212, 175, 55, 0.35));
+            }
+            40% {
+                transform: scale(1.06);
+                filter: drop-shadow(0 0 26px rgba(201, 168, 76, 0.9)) drop-shadow(0 0 52px rgba(212, 175, 55, 0.5));
+            }
+            70% {
+                transform: scale(1.02);
+                filter: drop-shadow(0 0 20px rgba(201, 168, 76, 0.78)) drop-shadow(0 0 44px rgba(212, 175, 55, 0.4));
+            }
+        }
+
+        /* ── Header ──────────────────────────────────── */
+        .header-title {
+            font-family: 'Cinzel', 'Georgia', serif;
+            font-weight: 700;
+            font-size: clamp(1.8rem, 4.5vw, 2.6rem);
+            text-align: center;
+            color: var(--starlight-white);
+            letter-spacing: 0.06em;
+            text-shadow: 0 0 20px rgba(168, 196, 209, 0.5), 0 2px 6px rgba(0, 0, 0, 0.5);
+            line-height: 1.25;
+        }
+
+        .header-subtitle {
+            font-family: 'Cinzel', 'Georgia', serif;
+            font-weight: 400;
+            font-size: clamp(0.9rem, 2.2vw, 1.15rem);
+            text-align: center;
+            color: var(--gold-elven);
+            letter-spacing: 0.1em;
+            text-shadow: 0 0 12px rgba(201, 168, 76, 0.45);
+            margin-top: -0.3rem;
+        }
+
+        /* ── Lore Quote ──────────────────────────────── */
+        .lore-quote {
+            font-family: 'Lora', Georgia, serif;
+            font-style: italic;
+            font-weight: 400;
+            font-size: 0.9rem;
+            text-align: center;
+            color: var(--starlight-silver);
+            opacity: 0.8;
+            max-width: 480px;
+            line-height: 1.5;
+            padding: 0 0.5rem;
+            letter-spacing: 0.02em;
+        }
+
+        .lore-quote::before {
+            content: '"';
+            font-family: 'Cinzel', serif;
+            font-size: 1.6rem;
+            color: var(--gold-elven);
+            opacity: 0.7;
+            vertical-align: -0.15em;
+            margin-right: 0.15em;
+        }
+        .lore-quote::after {
+            content: '"';
+            font-family: 'Cinzel', serif;
+            font-size: 1.6rem;
+            color: var(--gold-elven);
+            opacity: 0.7;
+            vertical-align: -0.3em;
+            margin-left: 0.15em;
+        }
+
+        /* ── Blessing Card ───────────────────────────── */
+        .blessing-card {
+            width: 100%;
+            max-width: 540px;
+            min-height: 180px;
+            background:
+                radial-gradient(ellipse at 50% 50%, var(--parchment) 30%, var(--parchment-dark) 70%, var(--parchment-edge) 100%);
+            border: 2px solid var(--gold-elven);
+            border-radius: var(--border-radius);
+            padding: var(--card-padding);
+            position: relative;
+            box-shadow:
+                0 0 0 4px rgba(201, 168, 76, 0.2),
+                0 0 0 8px rgba(201, 168, 76, 0.08),
+                0 8px 32px rgba(0, 0, 0, 0.5),
+                inset 0 0 40px rgba(139, 115, 55, 0.15);
+            transition: box-shadow var(--transition-smooth), border-color var(--transition-smooth);
+            overflow: hidden;
+        }
+
+        /* Elven corner flourishes */
+        .blessing-card::before,
+        .blessing-card::after {
+            content: '';
+            position: absolute;
+            width: 28px;
+            height: 28px;
+            pointer-events: none;
+            z-index: 2;
+            opacity: 0.7;
+            transition: opacity var(--transition-smooth);
+        }
+
+        .blessing-card::before {
+            top: 8px;
+            left: 8px;
+            border-top: 2px solid var(--gold-bright);
+            border-left: 2px solid var(--gold-bright);
+            border-radius: 6px 0 0 0;
+        }
+
+        .blessing-card::after {
+            bottom: 8px;
+            right: 8px;
+            border-bottom: 2px solid var(--gold-bright);
+            border-right: 2px solid var(--gold-bright);
+            border-radius: 0 0 6px 0;
+        }
+
+        /* Additional corner accents via inner wrapper pseudo-elements */
+        .card-inner {
+            position: relative;
+            z-index: 1;
+        }
+
+        .card-inner::before,
+        .card-inner::after {
+            content: '';
+            position: absolute;
+            width: 28px;
+            height: 28px;
+            pointer-events: none;
+            z-index: 2;
+            opacity: 0.7;
+        }
+
+        .card-inner::before {
+            top: -8px;
+            right: -8px;
+            border-top: 2px solid var(--gold-bright);
+            border-right: 2px solid var(--gold-bright);
+            border-radius: 0 6px 0 0;
+        }
+
+        .card-inner::after {
+            bottom: -8px;
+            left: -8px;
+            border-bottom: 2px solid var(--gold-bright);
+            border-left: 2px solid var(--gold-bright);
+            border-radius: 0 0 0 6px;
+        }
+
+        /* Subtle shimmer line across the card */
+        .blessing-card .shimmer-line {
+            position: absolute;
+            top: 50%;
+            left: 12%;
+            right: 12%;
+            height: 1px;
+            background: linear-gradient(90deg,
+                    transparent 0%,
+                    rgba(201, 168, 76, 0.5) 20%,
+                    rgba(212, 175, 55, 0.7) 50%,
+                    rgba(201, 168, 76, 0.5) 80%,
+                    transparent 100%);
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.55;
+        }
+
+        /* Blessing content */
+        .blessing-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            transition: opacity 0.35s ease-out;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .blessing-content.fading-out {
+            opacity: 0;
+        }
+
+        .blessing-content.fading-in {
+            animation: fadeInBlessing 0.7s ease-out forwards;
+        }
+
+        @keyframes fadeInBlessing {
+            0% {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .blessing-sindarin {
+            font-family: 'Lora', Georgia, serif;
+            font-style: italic;
+            font-weight: 500;
+            font-size: clamp(1.15rem, 2.8vw, 1.45rem);
+            color: #8b6914;
+            letter-spacing: 0.03em;
+            line-height: 1.5;
+            text-shadow: 0 1px 2px rgba(139, 105, 20, 0.2);
+        }
+
+        .blessing-english {
+            font-family: 'Lora', Georgia, serif;
+            font-weight: 500;
+            font-size: clamp(1rem, 2.2vw, 1.15rem);
+            color: #3d2b1f;
+            letter-spacing: 0.02em;
+            line-height: 1.5;
+        }
+
+        .blessing-context {
+            font-family: 'Lora', Georgia, serif;
+            font-weight: 400;
+            font-size: 0.8rem;
+            color: #6b5e4a;
+            font-style: italic;
+            opacity: 0.8;
+            line-height: 1.4;
+            max-width: 400px;
+        }
+
+        .blessing-placeholder {
+            font-family: 'Lora', Georgia, serif;
+            font-style: italic;
+            font-weight: 400;
+            font-size: 1rem;
+            color: #8b7355;
+            opacity: 0.7;
+            text-align: center;
+        }
+
+        /* ── Button ──────────────────────────────────── */
+        .btn-blessing {
+            font-family: 'Cinzel', 'Georgia', serif;
+            font-weight: 600;
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
+            letter-spacing: 0.07em;
+            padding: 0.9rem 2.2rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            color: #1a1a0a;
+            background: linear-gradient(135deg, #d4af37 0%, #c9a84c 30%, #e0c060 60%, #b8962e 100%);
+            box-shadow:
+                0 4px 16px rgba(201, 168, 76, 0.45),
+                0 1px 4px rgba(0, 0, 0, 0.3),
+                inset 0 1px 1px rgba(255, 255, 255, 0.3);
+            transition: all var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
+            min-width: 200px;
+        }
+
+        .btn-blessing::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.35) 0%, transparent 60%);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+
+        .btn-blessing:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow:
+                0 8px 28px rgba(201, 168, 76, 0.6),
+                0 2px 8px rgba(0, 0, 0, 0.35),
+                inset 0 1px 2px rgba(255, 255, 255, 0.4);
+            background: linear-gradient(135deg, #e0c060 0%, #d4af37 30%, #edc970 60%, #c9a84c 100%);
+        }
+
+        .btn-blessing:hover:not(:disabled)::before {
+            opacity: 1;
+        }
+
+        .btn-blessing:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow:
+                0 2px 8px rgba(201, 168, 76, 0.4),
+                0 1px 2px rgba(0, 0, 0, 0.3);
+            transition: all 0.1s ease;
+        }
+
+        .btn-blessing:disabled {
+            opacity: 0.7;
+            cursor: wait;
+            background: linear-gradient(135deg, #8b7d5a 0%, #7a6d48 30%, #9c8c5e 60%, #6d5f3a 100%);
+            box-shadow: 0 2px 8px rgba(100, 90, 60, 0.3);
+            animation: subtlePulse 1.2s ease-in-out infinite;
+        }
+
+        @keyframes subtlePulse {
+            0%,
+            100% {
+                box-shadow: 0 2px 8px rgba(100, 90, 60, 0.3);
+            }
+            50% {
+                box-shadow: 0 4px 18px rgba(140, 120, 70, 0.5);
+            }
+        }
+
+        /* ── Counter ─────────────────────────────────── */
+        .counter-text {
+            font-family: 'Lora', Georgia, serif;
+            font-weight: 400;
+            font-size: 0.85rem;
+            color: var(--starlight-silver);
+            text-align: center;
+            opacity: 0.75;
+            letter-spacing: 0.03em;
+            transition: all 0.3s ease;
+        }
+
+        .counter-number {
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            color: var(--gold-bright);
+            font-size: 1.05rem;
+            transition: transform 0.25s ease;
+            display: inline-block;
+        }
+
+        .counter-number.pulse {
+            animation: counterPop 0.45s ease-out;
+        }
+
+        @keyframes counterPop {
+            0% {
+                transform: scale(1);
+            }
+            40% {
+                transform: scale(1.35);
+                color: #e8d48b;
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* ── Footer ──────────────────────────────────── */
+        .footer-text {
+            font-family: 'Lora', Georgia, serif;
+            font-weight: 400;
+            font-size: 0.78rem;
+            color: var(--starlight-silver);
+            text-align: center;
+            opacity: 0.65;
+            letter-spacing: 0.03em;
+            line-height: 1.6;
+            padding-top: 0.5rem;
+        }
+
+        .version-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-family: 'Cinzel', serif;
+            font-weight: 500;
+            font-size: 0.7rem;
+            letter-spacing: 0.06em;
+            color: var(--starlight-silver);
+            opacity: 0.7;
+            margin-top: 0.3rem;
+        }
+
+        .version-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--version-indicator-color);
+            box-shadow: 0 0 6px var(--version-indicator-color);
+            transition: background-color 0.5s ease, box-shadow 0.5s ease;
+        }
+
+        /* ── Error State ─────────────────────────────── */
+        .blessing-error {
+            color: #c97b6b;
+            font-style: italic;
+            text-align: center;
+            padding: 1rem;
+            font-family: 'Lora', Georgia, serif;
+        }
+
+        /* ── Responsive Adjustments ─────────────────── */
+        @media (max-width: 480px) {
+            :root {
+                --card-padding: 1.4rem;
+            }
+
+            .evenstar-icon {
+                width: 60px;
+                height: 60px;
+            }
+
+            .blessing-card {
+                min-height: 150px;
+                border-radius: 8px;
+            }
+
+            .blessing-card::before,
+            .blessing-card::after,
+            .card-inner::before,
+            .card-inner::after {
+                width: 20px;
+                height: 20px;
+            }
+
+            .blessing-card::before {
+                top: 5px;
+                left: 5px;
+            }
+            .blessing-card::after {
+                bottom: 5px;
+                right: 5px;
+            }
+            .card-inner::before {
+                top: -5px;
+                right: -5px;
+            }
+            .card-inner::after {
+                bottom: -5px;
+                left: -5px;
+            }
+
+            .btn-blessing {
+                padding: 0.75rem 1.6rem;
+                font-size: 0.95rem;
+                min-width: 160px;
+            }
+
+            .blessing-card .shimmer-line {
+                left: 8%;
+                right: 8%;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .header-title {
+                font-size: 1.4rem;
+            }
+            .header-subtitle {
+                font-size: 0.75rem;
+            }
+            .blessing-sindarin {
+                font-size: 1rem;
+            }
+            .blessing-english {
+                font-size: 0.9rem;
+            }
+            .blessing-context {
+                font-size: 0.7rem;
+            }
+            .btn-blessing {
+                padding: 0.65rem 1.2rem;
+                font-size: 0.85rem;
+                min-width: 140px;
+                border-radius: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Starfield background canvas -->
+    <canvas id="starfield-canvas" aria-hidden="true"></canvas>
+
+    <!-- Main Content -->
+    <div class="main-container">
+
+        <!-- Evenstar Pendant SVG Icon -->
+        <svg class="evenstar-icon" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" aria-label="Evenstar Pendant of Arwen Undómiel">
+            <defs>
+                <radialGradient id="evenstarGrad" cx="50%" cy="45%" r="48%">
+                    <stop offset="0%" stop-color="#f5f0e8"/>
+                    <stop offset="35%" stop-color="#e8e4d9"/>
+                    <stop offset="65%" stop-color="#d4af37"/>
+                    <stop offset="100%" stop-color="#8b6914"/>
+                </radialGradient>
+                <filter id="glowFilter">
+                    <feGaussianBlur stdDeviation="2.5" result="blur"/>
+                    <feMerge>
+                        <feMergeNode in="blur"/>
+                        <feMergeNode in="blur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                </filter>
+            </defs>
+            <!-- Main star shape (8-pointed Evenstar) -->
+            <polygon points="40,5 46,28 68,28 50,42 56,66 40,50 24,66 30,42 12,28 34,28"
+            fill="url(#evenstarGrad)" filter="url(#glowFilter)" stroke="#a8c4d1" stroke-width="0.8" opacity="0.95"/>
+            <!-- Central gem -->
+            <circle cx="40" cy="38" r="7" fill="#e8e4d9" opacity="0.85"/>
+            <circle cx="40" cy="38" r="4" fill="#ffffff" opacity="0.7"/>
+            <!-- Inner star points -->
+            <polygon points="40,18 43,32 56,32 45,40 49,54 40,45 31,54 35,40 24,32 37,32"
+            fill="none" stroke="#c9a84c" stroke-width="0.6" opacity="0.6"/>
+            <!-- Top loop for pendant chain -->
+            <circle cx="40" cy="7" r="3" fill="none" stroke="#a8c4d1" stroke-width="1.2" opacity="0.8"/>
+        </svg>
+
+        <!-- Header -->
+        <h1 class="header-title">Arwen Undómiel</h1>
+        <p class="header-subtitle">Evenstar of Her People</p>
+
+        <!-- Lore Quote -->
+        <p class="lore-quote">
+            She was called Undómiel, for she was the Evenstar of her people.
+            <br><span style="font-size:0.75rem;opacity:0.7;">— The Return of the King</span>
+        </p>
+
+        <!-- Blessing Card -->
+        <div class="blessing-card" id="blessingCard">
+            <div class="shimmer-line" aria-hidden="true"></div>
+            <div class="card-inner">
+                <div class="blessing-content" id="blessingContent">
+                    <p class="blessing-placeholder">Your blessing awaits…<br><span style="font-size:0.75rem;">Click the button below to receive Arwen's grace.</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Button -->
+        <button class="btn-blessing" id="btnBlessing" type="button" aria-label="Receive Arwen's Blessing">
+            Receive Arwen's Blessing
+        </button>
+
+        <!-- Counter -->
+        <p class="counter-text" id="counterText">
+            <span class="counter-number" id="counterNumber">0</span> blessings have been bestowed upon visitors today
+        </p>
+
+        <!-- Footer -->
+        <footer>
+            <p class="footer-text">
+                May the grace of the Valar go with you &bull; Made with starlight and elven craft
+            </p>
+            <div class="version-indicator">
+                <span class="version-dot" aria-hidden="true"></span>
+                Version <span id="versionNumber">1.0.0</span>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        (function() {
+            // ──────────────────────────────────────────────
+            // BLESSINGS DATABASE
+            // All 12 Elvish blessings with Sindarin text,
+            // English translation, and lore context.
+            // ──────────────────────────────────────────────
+            const blessings = [{
+                sindarin: 'Nai tiruvantel ar varyuvantel i Valar tielyanna',
+                english: 'May the Valar protect you on your path',
+                context: 'Elrond\'s farewell blessing to the Fellowship as they departed Rivendell'
+            }, {
+                sindarin: 'Nai elen siluva lyenna',
+                english: 'May a star shine upon you',
+                context: 'A common Elvish greeting of goodwill, spoken throughout the ages'
+            }, {
+                sindarin: 'Cuio i Pheriain anann',
+                english: 'May the Halflings live long',
+                context: 'A blessing spoken upon the Ring-bearers at the coronation of King Elessar'
+            }, {
+                sindarin: 'Nai aurelya nauva calima',
+                english: 'May your day be bright',
+                context: 'A morning greeting shared among the Elves of Rivendell'
+            }, {
+                sindarin: 'Elen síla lúmenn\' omentielvo',
+                english: 'A star shines on the hour of our meeting',
+                context: 'Frodo\'s greeting to Gildor Inglorion in the woods of the Shire'
+            }, {
+                sindarin: 'Quel fara, mellon nín',
+                english: 'Good hunting, my friend',
+                context: 'A farewell blessing exchanged among Elven hunters in the wilds'
+            }, {
+                sindarin: 'Nai i hwindor nauvar vardar lye',
+                english: 'May the breezes protect you',
+                context: 'A traveler\'s blessing, whispered on the windswept plains of Middle-earth'
+            }, {
+                sindarin: 'Cormlle naa tanya tel\'raa',
+                english: 'Your heart is steadfast',
+                context: 'Galadriel\'s words of comfort to those facing despair and darkness'
+            }, {
+                sindarin: 'Lissenen ar\' maska\'lalaith tenna\' lye omentuva',
+                english: 'Sweet water and light laughter until we meet again',
+                context: 'A parting blessing among the Elves of Lothlórien'
+            }, {
+                sindarin: 'Nai Anar caluva tielyanna',
+                english: 'May the Sun shine upon your path',
+                context: 'A blessing for travelers setting out at the break of dawn'
+            }, {
+                sindarin: 'Ae ú-esteliach nad, estelio han',
+                english: 'If you trust nothing, trust this',
+                context: 'Gilraen\'s last words to her son Aragorn, a gift of unwavering hope'
+            }, {
+                sindarin: 'Nai Valar nauvar as elye',
+                english: 'May the Valar be with you',
+                context: 'A blessing spoken at the Grey Havens as ships depart into the West'
+            }];
+
+            // ──────────────────────────────────────────────
+            // DOM REFERENCES
+            // ──────────────────────────────────────────────
+            const btnBlessing = document.getElementById('btnBlessing');
+            const blessingContent = document.getElementById('blessingContent');
+            const counterNumber = document.getElementById('counterNumber');
+            const counterText = document.getElementById('counterText');
+            const versionNumberEl = document.getElementById('versionNumber');
+            const starfieldCanvas = document.getElementById('starfield-canvas');
+            const ctx = starfieldCanvas.getContext('2d');
+
+            // ──────────────────────────────────────────────
+            // APPLICATION STATE
+            // ──────────────────────────────────────────────
+            const APP_VERSION = '1.0.0';
+            let isLoading = false;
+            let blessingCountToday = 0;
+            let previousBlessingIndex = -1; // Track to avoid immediate repeats
+
+            // Set version in the footer
+            versionNumberEl.textContent = APP_VERSION;
+
+            // ──────────────────────────────────────────────
+            // LOCAL STORAGE — Counter with daily reset
+            // Tracks blessings per calendar day. Falls back
+            // to in-memory counter if localStorage is unavailable.
+            // ──────────────────────────────────────────────
+            function getTodayDateString() {
+                const now = new Date();
+                return now.getFullYear() + '-' +
+                    String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                    String(now.getDate()).padStart(2, '0');
+            }
+
+            function loadCounterFromStorage() {
+                try {
+                    const storedDate = localStorage.getItem('arwenBlessingDate');
+                    const today = getTodayDateString();
+                    if (storedDate === today) {
+                        const storedCount = parseInt(localStorage.getItem('arwenBlessingCount'), 10);
+                        blessingCountToday = isNaN(storedCount) ? 0 : storedCount;
+                    } else {
+                        // New day — reset counter
+                        blessingCountToday = 0;
+                        localStorage.setItem('arwenBlessingDate', today);
+                        localStorage.setItem('arwenBlessingCount', '0');
+                    }
+                } catch (e) {
+                    // localStorage unavailable (e.g., private browsing) — use in-memory only
+                    blessingCountToday = 0;
+                }
+            }
+
+            function saveCounterToStorage() {
+                try {
+                    localStorage.setItem('arwenBlessingDate', getTodayDateString());
+                    localStorage.setItem('arwenBlessingCount', String(blessingCountToday));
+                } catch (e) {
+                    // Silently fail — counter continues in-memory for this session
+                }
+            }
+
+            function updateCounterDisplay() {
+                counterNumber.textContent = blessingCountToday;
+                // Brief pulse animation on the number
+                counterNumber.classList.remove('pulse');
+                void counterNumber.offsetWidth; // Force reflow to restart animation
+                counterNumber.classList.add('pulse');
+            }
+
+            // ──────────────────────────────────────────────
+            // WEB AUDIO API — Subtle Elvish Chime
+            // Creates a bell-like three-tone chime using
+            // sine wave oscillators with harmonic intervals.
+            // No external audio files required.
+            // ──────────────────────────────────────────────
+            function playChime() {
+                try {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (!AudioContext) return; // Browser doesn't support Web Audio
+                    const audioCtx = new AudioContext();
+                    const now = audioCtx.currentTime;
+
+                    // Master gain — keeps the chime subtle
+                    const masterGain = audioCtx.createGain();
+                    masterGain.connect(audioCtx.destination);
+                    masterGain.gain.setValueAtTime(0.25, now);
+                    masterGain.gain.exponentialRampToValueAtTime(0.001, now + 1.6);
+
+                    // Main tone: A5 (880 Hz) — clear and bright
+                    const osc1 = audioCtx.createOscillator();
+                    osc1.type = 'sine';
+                    osc1.frequency.setValueAtTime(880, now);
+                    osc1.connect(masterGain);
+                    osc1.start(now);
+                    osc1.stop(now + 1.6);
+
+                    // Harmonic fifth: E6 (1320 Hz) — adds warmth
+                    const osc2 = audioCtx.createOscillator();
+                    osc2.type = 'sine';
+                    osc2.frequency.setValueAtTime(1320, now);
+                    const gain2 = audioCtx.createGain();
+                    gain2.connect(masterGain);
+                    gain2.gain.setValueAtTime(0.6, now);
+                    gain2.gain.exponentialRampToValueAtTime(0.001, now + 1.3);
+                    osc2.connect(gain2);
+                    osc2.start(now);
+                    osc2.stop(now + 1.3);
+
+                    // Shimmer octave: A6 (1760 Hz) — ethereal sparkle
+                    const osc3 = audioCtx.createOscillator();
+                    osc3.type = 'sine';
+                    osc3.frequency.setValueAtTime(1760, now);
+                    const gain3 = audioCtx.createGain();
+                    gain3.connect(masterGain);
+                    gain3.gain.setValueAtTime(0.35, now);
+                    gain3.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
+                    osc3.connect(gain3);
+                    osc3.start(now);
+                    osc3.stop(now + 0.9);
+
+                } catch (e) {
+                    // Web Audio API failed — silently ignore; sound is optional
+                }
+            }
+
+            // ──────────────────────────────────────────────
+            // BLESSING LOGIC
+            // Selects a random blessing, avoiding immediate
+            // repeats for a better user experience.
+            // ──────────────────────────────────────────────
+            function getRandomBlessing() {
+                let index;
+                if (blessings.length === 1) {
+                    index = 0;
+                } else {
+                    do {
+                        index = Math.floor(Math.random() * blessings.length);
+                    } while (index === previousBlessingIndex && blessings.length > 1);
+                }
+                previousBlessingIndex = index;
+                return blessings[index];
+            }
+
+            function renderBlessing(blessing) {
+                blessingContent.innerHTML = `
+                    <p class="blessing-sindarin">${escapeHTML(blessing.sindarin)}</p>
+                    <p class="blessing-english">${escapeHTML(blessing.english)}</p>
+                    <p class="blessing-context">${escapeHTML(blessing.context)}</p>
+                `;
+            }
+
+            function renderError() {
+                blessingContent.innerHTML = `
+                    <p class="blessing-error">
+                        The Evenstar's light flickers…<br>
+                        <span style="font-size:0.8rem;">Please try again, mellon nín.</span>
+                    </p>
+                `;
+            }
+
+            function renderPlaceholder() {
+                blessingContent.innerHTML = `
+                    <p class="blessing-placeholder">Your blessing awaits…<br>
+                    <span style="font-size:0.75rem;">Click the button below to receive Arwen's grace.</span></p>
+                `;
+            }
+
+            // Simple HTML escape to prevent XSS
+            function escapeHTML(str) {
+                const div = document.createElement('div');
+                div.appendChild(document.createTextNode(str));
+                return div.innerHTML;
+            }
+
+            // ──────────────────────────────────────────────
+            // MAIN ACTION — Fetch & Display Blessing
+            // Simulates an API call with a brief delay for
+            // a more authentic, contemplative experience.
+            // ──────────────────────────────────────────────
+            async function fetchAndDisplayBlessing() {
+                if (isLoading) return; // Prevent double-clicks during loading
+
+                isLoading = true;
+                btnBlessing.disabled = true;
+                btnBlessing.textContent = 'Consulting the Evenstar…';
+
+                // Fade out current content
+                blessingContent.classList.add('fading-out');
+
+                try {
+                    // Simulate network request (600–900ms) for authentic feel
+                    const delay = 600 + Math.random() * 300;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+
+                    // Occasionally simulate an error (~3% chance) to demonstrate
+                    // graceful error handling in production
+                    if (Math.random() < 0.03) {
+                        throw new Error('Simulated network hiccup — the Evenstar flickers');
+                    }
+
+                    const blessing = getRandomBlessing();
+
+                    // Wait for fade-out to complete, then update content
+                    await new Promise(resolve => setTimeout(resolve, 350));
+
+                    renderBlessing(blessing);
+                    blessingContent.classList.remove('fading-out');
+                    blessingContent.classList.add('fading-in');
+
+                    // Clean up animation class after it completes
+                    setTimeout(() => {
+                        blessingContent.classList.remove('fading-in');
+                    }, 750);
+
+                    // Increment counter
+                    blessingCountToday++;
+                    saveCounterToStorage();
+                    updateCounterDisplay();
+
+                    // Play the chime
+                    playChime();
+
+                } catch (error) {
+                    // Graceful error fallback
+                    console.warn('Blessing fetch failed:', error.message);
+                    await new Promise(resolve => setTimeout(resolve, 350));
+                    renderError();
+                    blessingContent.classList.remove('fading-out');
+                    blessingContent.classList.add('fading-in');
+                    setTimeout(() => {
+                        blessingContent.classList.remove('fading-in');
+                    }, 750);
+
+                    // Still count the attempt
+                    blessingCountToday++;
+                    saveCounterToStorage();
+                    updateCounterDisplay();
+
+                } finally {
+                    isLoading = false;
+                    btnBlessing.disabled = false;
+                    btnBlessing.textContent = 'Receive Arwen\'s Blessing';
+                }
+            }
+
+            // ──────────────────────────────────────────────
+            // STARFIELD PARTICLE SYSTEM
+            // Creates a slowly drifting field of twinkling
+            // stars (like Elbereth's stars) on a canvas
+            // behind all content.
+            // ──────────────────────────────────────────────
+            class Star {
+                constructor(canvasWidth, canvasHeight) {
+                    this.reset(canvasWidth, canvasHeight, true);
+                }
+
+                reset(canvasWidth, canvasHeight, initialRandomY) {
+                    this.x = Math.random() * canvasWidth;
+                    this.y = initialRandomY ? Math.random() * canvasHeight : canvasHeight + Math.random() * 40;
+                    this.size = Math.random() * 2.2 + 0.4;
+                    this.baseOpacity = Math.random() * 0.5 + 0.35;
+                    this.twinkleSpeed = Math.random() * 0.018 + 0.004;
+                    this.twinkleOffset = Math.random() * Math.PI * 2;
+                    this.driftX = (Math.random() - 0.5) * 0.25;
+                    this.driftY = -(Math.random() * 0.35 + 0.08); // Slow upward drift
+                }
+
+                update(time, canvasWidth, canvasHeight) {
+                    // Twinkling opacity using sine wave
+                    const twinkle = Math.sin(time * this.twinkleSpeed + this.twinkleOffset);
+                    this.currentOpacity = this.baseOpacity + twinkle * 0.35;
+                    this.currentOpacity = Math.max(0.08, Math.min(0.9, this.currentOpacity));
+
+                    // Drift
+                    this.x += this.driftX;
+                    this.y += this.driftY;
+
+                    // Wrap around edges seamlessly
+                    if (this.y < -8) {
+                        this.y = canvasHeight + Math.random() * 8;
+                        this.x = Math.random() * canvasWidth;
+                    }
+                    if (this.x < -8) this.x = canvasWidth + 8;
+                    if (this.x > canvasWidth + 8) this.x = -8;
+                }
+
+                draw(ctx) {
+                    // Main star point
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(232, 228, 217, ${this.currentOpacity})`;
+                    ctx.fill();
+
+                    // Soft glow halo for slightly larger stars
+                    if (this.size > 1.3) {
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, this.size * 3.2, 0, Math.PI * 2);
+                        const haloGradient = ctx.createRadialGradient(
+                            this.x, this.y, this.size * 0.5,
+                            this.x, this.y, this.size * 3.2
+                        );
+                        haloGradient.addColorStop(0, `rgba(200, 210, 225, ${this.currentOpacity * 0.5})`);
+                        haloGradient.addColorStop(1, 'rgba(200, 210, 225, 0)');
+                        ctx.fillStyle = haloGradient;
+                        ctx.fill();
+                    }
+
+                    // Occasional brighter core for very large stars
+                    if (this.size > 1.8 && this.currentOpacity > 0.6) {
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, this.size * 0.5, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255, 252, 245, ${this.currentOpacity * 0.8})`;
+                        ctx.fill();
+                    }
+                }
+            }
+
+            // Determine particle count based on screen size for performance
+            function getStarCount() {
+                const width = window.innerWidth;
+                if (width < 400) return 45;
+                if (width < 768) return 70;
+                return 100;
+            }
+
+            let stars = [];
+            let animationFrameId = null;
+            let starfieldTime = 0;
+
+            function initStarfield() {
+                const width = starfieldCanvas.width;
+                const height = starfieldCanvas.height;
+                const count = getStarCount();
+                stars = [];
+                for (let i = 0; i < count; i++) {
+                    stars.push(new Star(width, height));
+                }
+            }
+
+            function resizeStarfield() {
+                const dpr = window.devicePixelRatio || 1;
+                const displayWidth = window.innerWidth;
+                const displayHeight = window.innerHeight;
+                starfieldCanvas.style.width = displayWidth + 'px';
+                starfieldCanvas.style.height = displayHeight + 'px';
+                starfieldCanvas.width = displayWidth * dpr;
+                starfieldCanvas.height = displayHeight * dpr;
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.scale(dpr, dpr);
+                // Reinitialize stars for new dimensions
+                initStarfield();
+            }
+
+            function animateStarfield(timestamp) {
+                starfieldTime = timestamp;
+                const width = starfieldCanvas.width / (window.devicePixelRatio || 1);
+                const height = starfieldCanvas.height / (window.devicePixelRatio || 1);
+
+                ctx.clearRect(0, 0, width, height);
+
+                for (const star of stars) {
+                    star.update(timestamp, width, height);
+                    star.draw(ctx);
+                }
+
+                animationFrameId = requestAnimationFrame(animateStarfield);
+            }
+
+            // ──────────────────────────────────────────────
+            // EVENT LISTENERS
+            // ──────────────────────────────────────────────
+            btnBlessing.addEventListener('click', fetchAndDisplayBlessing);
+
+            // Keyboard accessibility: Enter/Space on the button
+            btnBlessing.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    fetchAndDisplayBlessing();
+                }
+            });
+
+            // Handle window resize for starfield
+            let resizeDebounceTimer;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeDebounceTimer);
+                resizeDebounceTimer = setTimeout(() => {
+                    resizeStarfield();
+                }, 250);
+            });
+
+            // ──────────────────────────────────────────────
+            // INITIALIZATION
+            // ──────────────────────────────────────────────
+            function init() {
+                // Load counter from storage
+                loadCounterFromStorage();
+                updateCounterDisplay();
+
+                // Initialize starfield
+                resizeStarfield();
+                animationFrameId = requestAnimationFrame(animateStarfield);
+
+                // Set initial placeholder in the card
+                renderPlaceholder();
+
+                // Log startup info
+                console.log(
+                    '%c✨ Arwen\'s Blessing Generator %cv' + APP_VERSION +
+                    ' %c— May the grace of the Valar go with you.',
+                    'color: #d4af37; font-size: 1.1em;',
+                    'color: #a8c4d1;',
+                    'color: #e8e4d9;'
+                );
+                console.log(
+                    '%c💡 Tip: Change %c--version-indicator-color %cin the CSS :root to visually confirm deployments.',
+                    'color: #a8c4d1;',
+                    'color: #d4af37;',
+                    'color: #a8c4d1;'
+                );
+            }
+
+            // Start everything
+            init();
+
+            // ──────────────────────────────────────────────
+            // CLEANUP (for hot-reload scenarios)
+            // ──────────────────────────────────────────────
+            window.addEventListener('beforeunload', () => {
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                }
+            });
+
+        })();
+    </script>
+</body>
+</html>
